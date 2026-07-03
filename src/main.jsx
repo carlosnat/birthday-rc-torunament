@@ -9,6 +9,7 @@ import Landing from './views/landing/Landing.jsx'
 import Harness from './views/harness/Harness.jsx'
 import PublicoEspejo from './views/publico/PublicoEspejo.jsx'
 import Registro from './views/registro/Registro.jsx'
+import Sensor from './views/sensor/Sensor.jsx'
 
 import './styles/tokens.css'
 import './styles/layout.css'
@@ -18,9 +19,11 @@ const VISTAS = {
   harness: Harness,
   publico: PublicoEspejo,
   registro: Registro,
+  sensor: Sensor,
 }
 
-const Vista = !TORNEO_ID ? Landing : VISTAS[ROL] || Harness
+// El sensor (Hito 3a) funciona sin ?t (aún no escribe en RTDB); el resto necesita torneo.
+const Vista = ROL === 'sensor' ? Sensor : !TORNEO_ID ? Landing : VISTAS[ROL] || Harness
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

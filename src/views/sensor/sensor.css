@@ -1,0 +1,50 @@
+/* src/views/sensor/sensor.css */
+.sensor { max-width: 520px; margin: 0 auto; }
+.text-verde { color: var(--verde); font-weight: 700; }
+
+.video-wrap {
+  position: relative;
+  width: 100%;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.video {
+  width: 100%;
+  display: block;
+}
+/* Franja central = zona de meta (20% del alto), solo visual. */
+.meta-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 40%;
+  height: 20%;
+  border-top: 2px solid var(--rojo-f1);
+  border-bottom: 2px solid var(--rojo-f1);
+  background: rgba(225, 6, 0, 0.12);
+  pointer-events: none;
+}
+.hidden-canvas { display: none; }
+
+.bars { display: flex; flex-direction: column; gap: var(--sp-2); }
+.bar-row { display: flex; align-items: center; gap: var(--sp-2); }
+.bar-track {
+  position: relative;
+  flex: 1;
+  height: 16px;
+  background: var(--bg-elev-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.bar-fill { height: 100%; border-radius: 999px; transition: width 0.1s linear; }
+.bar-threshold {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--text);
+}
+.bar-val { width: 56px; text-align: right; font-size: 13px; }
+
+input[type='range'] { width: 100%; accent-color: var(--rojo-f1); }

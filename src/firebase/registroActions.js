@@ -4,7 +4,7 @@
 
 import * as P from './paths.js'
 import { TORNEO_ID } from '../currentTorneo.js'
-import { pushPath, writePath, readPath, logEvento } from './tournamentDb.js'
+import { pushPath, writePath, readPath, updatePath, logEvento } from './tournamentDb.js'
 import { TORNEO } from '../domain/constants.js'
 import { coloresDisponibles, getColor } from '../domain/colors.js'
 
@@ -61,4 +61,14 @@ export async function registrarSensor(nombre) {
   const refS = await pushPath(P.sensores(T), sensor)
   await logEvento(T, 'SENSOR_REGISTRADO', { sensor: refS.key, nombre: sensor.nombre, orden })
   return { ok: true, sensorId: refS.key }
+}
+
+/** Latido del sensor: actualiza estado/fps/batería para el monitor de salud del comisario. */
+export function heartbeat(sensorId, { fps = null, bateria = null } = {}) {
+  return updatePath(P.sensor(T, sensorId), {
+    estado: 'CONECTADO',
+    lastHeartbeat: Date.now(),
+    fps,
+    bateria,
+  })
 }

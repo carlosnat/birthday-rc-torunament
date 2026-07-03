@@ -118,6 +118,19 @@ export async function asignarPiloto(torneo, eqId, nombre) {
 
 // --- CARRITOS / PASADAS ------------------------------------------------------
 
+/** Busca el equipo dueño de un color (identidad). */
+function equipoPorColor(torneo, colorId) {
+  const entrada = Object.entries(torneo?.equipos || {}).find(([, eq]) => eq.color === colorId)
+  return entrada ? entrada[0] : null
+}
+
+/** Pasada detectada por el sensor de meta: mapea color -> equipo y delega en pasada(). */
+export async function pasadaPorColor(torneo, colorId, ts = Date.now()) {
+  const eqId = equipoPorColor(torneo, colorId)
+  if (!eqId) return { aceptada: false, motivo: 'COLOR_SIN_EQUIPO', colorId }
+  return pasada(torneo, eqId, ts)
+}
+
 /** Procesa una pasada por meta para un equipo/color. */
 export async function pasada(torneo, eqId, ts = Date.now()) {
   const s = sesionActivaDe(torneo)
