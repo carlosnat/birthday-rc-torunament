@@ -1,0 +1,43 @@
+/* src/styles/tokens.css — variables, tipografía y keyframes globales */
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap');
+
+:root {
+  /* Paleta base F1/oscura */
+  --bg: #0a0a0a;
+  --bg-elev: #151515;
+  --bg-elev-2: #1f1f1f;
+  --border: #2c2c2c;
+  --text: #f5f5f5;
+  --text-dim: #9a9a9a;
+
+  /* Acentos */
+  --rojo-f1: #e10600; /* rojo Fórmula 1 */
+  --verde: #00d26a; /* luz verde / OK */
+  --amarillo: #ffd60a; /* precaución */
+  --morado: #b388ff; /* vuelta rápida */
+
+  /* Colores de equipo (Post-it neón) */
+  --color-amarillo: #eaff00;
+  --color-naranja: #ff6a00;
+  --color-azul: #00b7ff;
+  --color-verde: #7cff2a;
+
+  /* Espaciado / radios */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 16px;
+  --sp-4: 24px;
+  --radius: 8px;
+
+  --font: 'Ubuntu Mono', ui-monospace, monospace;
+}
+
+@keyframes parpadeo {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

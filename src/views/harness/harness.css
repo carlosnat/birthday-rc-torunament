@@ -1,0 +1,15 @@
+/* src/views/harness/harness.css */
+.text-dim { color: var(--text-dim); }
+.text-rojo { color: var(--rojo-f1); font-weight: 700; }
+.text-morado { color: var(--morado); font-weight: 700; }
+
+.input {
+  font-family: var(--font);
+  background: var(--bg-elev-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-1) var(--sp-2);
+}
+
+h1 { font-size: 18px; letter-spacing: 1px; }

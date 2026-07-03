@@ -1,0 +1,86 @@
+/* src/styles/components.css — componentes reutilizables */
+
+.panel {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-3);
+}
+
+.panel h2 {
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-bottom: var(--sp-2);
+}
+
+.btn {
+  font-family: var(--font);
+  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) { border-color: var(--text-dim); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.btn--primary { background: var(--rojo-f1); border-color: var(--rojo-f1); }
+.btn--verde { background: var(--verde); border-color: var(--verde); color: #062; }
+.btn--ghost { background: transparent; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px var(--sp-2);
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.chip-estado {
+  font-weight: 700;
+  padding: 2px var(--sp-2);
+  border-radius: var(--radius);
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+}
+
+table.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+table.tabla th, table.tabla td {
+  text-align: left;
+  padding: var(--sp-1) var(--sp-2);
+  border-bottom: 1px solid var(--border);
+}
+table.tabla th { color: var(--text-dim); font-weight: 400; }
+
+.log {
+  font-size: 12px;
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.log-item { animation: aparecer 0.15s ease; }
+.log-item--rechazo { color: var(--rojo-f1); }
+.log-time { color: var(--text-dim); }
