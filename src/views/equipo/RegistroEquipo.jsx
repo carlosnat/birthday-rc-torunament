@@ -1,66 +1,49 @@
-// src/views/registro/Registro.jsx
-// Alta autoservicio por QR (Hito 2). Se abre en el celular: ?t=uuid&rol=registro
-// Permite crear equipo, unirse a uno existente o registrar un sensor de pista.
+// src/views/equipo/RegistroEquipo.jsx
+// Alta de equipo desde la pantalla de equipo: crear nuevo equipo o sumarse a uno existente.
 
-import { useState } from 'react'
-import { useTorneo } from '../../context/TournamentContext.jsx'
+import { useEffect, useState } from 'react'
 import ColorBadge from '../../components/ColorBadge.jsx'
 import { coloresDisponibles } from '../../domain/colors.js'
-import { TORNEO } from '../../domain/constants.js'
 import * as R from '../../firebase/registroActions.js'
-import './registro.css'
+import './equipo.css'
 
-export default function Registro() {
-  const { torneo, loading } = useTorneo()
-  const [tab, setTab] = useState('equipo')
-
-  if (loading) return <div className="app">CARGANDO…</div>
-  if (!torneo) return <div className="app">TORNEO NO ENCONTRADO</div>
-  if (torneo.estado !== TORNEO.REGISTRO) {
-    return (
-      <div className="app stack">
-        <h1>{torneo.config?.nombre}</h1>
-        <div className="panel">EL REGISTRO ESTÁ CERRADO ({torneo.estado}).</div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="app stack">
-      <h1>{torneo.config?.nombre}</h1>
-      <div className="row">
-        <button className={`btn ${tab === 'equipo' ? 'btn--primary' : ''}`} onClick={() => setTab('equipo')}>SOY EQUIPO</button>
-        <button className={`btn ${tab === 'sensor' ? 'btn--primary' : ''}`} onClick={() => setTab('sensor')}>SOY SENSOR</button>
-      </div>
-      {tab === 'equipo' ? <RegistroEquipo torneo={torneo} /> : <RegistroSensor />}
-    </div>
-  )
-}
-
-function RegistroEquipo({ torneo }) {
+export default function RegistroEquipo({ torneo, onListo }) {
   const disponibles = coloresDisponibles(torneo.equipos)
   const equipos = Object.entries(torneo.equipos || {})
-  const [modo, setModo] = useState('crear') // crear | unirse
+  const [modo, setModo] = useState('crear')
   const [nombreEquipo, setNombreEquipo] = useState('')
   const [colorId, setColorId] = useState(disponibles[0]?.id || '')
   const [miNombre, setMiNombre] = useState('')
   const [eqId, setEqId] = useState(equipos[0]?.[0] || '')
   const [msg, setMsg] = useState(null)
 
+  useEffect(() => {
+    if (!colorId && disponibles[0]?.id) setColorId(disponibles[0].id)
+    if (!eqId && equipos[0]?.[0]) setEqId(equipos[0][0])
+  }, [disponibles, equipos, colorId, eqId])
+
   async function crear() {
     const res = await R.crearEquipo(torneo, { nombre: nombreEquipo, colorId, participante: miNombre })
-    setMsg(res.ok ? { ok: true, txt: '¡EQUIPO CREADO! YA PODÉS CERRAR.' } : { ok: false, txt: res.motivo })
-    if (res.ok) { setNombreEquipo(''); setMiNombre('') }
+    setMsg(res.ok ? { ok: true, txt: '¡EQUIPO CREADO! YA PODÉS ENTRAR.' } : { ok: false, txt: res.motivo })
+    if (res.ok) {
+      setNombreEquipo('')
+      setMiNombre('')
+      onListo?.(res.eqId)
+    }
   }
 
   async function unirse() {
     const res = await R.unirseEquipo(torneo, eqId, miNombre)
     setMsg(res.ok ? { ok: true, txt: '¡TE UNISTE AL EQUIPO!' } : { ok: false, txt: res.motivo })
-    if (res.ok) setMiNombre('')
+    if (res.ok) {
+      setMiNombre('')
+      onListo?.(res.eqId)
+    }
   }
 
   return (
-    <div className="stack">
+    <div className="app eq stack">
+      <h1>REGISTRO DE EQUIPO</h1>
       <div className="row">
         <button className={`btn btn--ghost ${modo === 'crear' ? 'sel' : ''}`} onClick={() => setModo('crear')}>CREAR EQUIPO</button>
         <button className={`btn btn--ghost ${modo === 'unirse' ? 'sel' : ''}`} disabled={equipos.length === 0} onClick={() => setModo('unirse')}>UNIRME A UNO</button>
@@ -107,26 +90,6 @@ function RegistroEquipo({ torneo }) {
       )}
 
       {msg && <div className={`panel ${msg.ok ? 'ok' : 'text-rojo'}`}>{msg.txt}</div>}
-    </div>
-  )
-}
-
-function RegistroSensor() {
-  const [nombre, setNombre] = useState('')
-  const [msg, setMsg] = useState(null)
-
-  async function registrar() {
-    const res = await R.registrarSensor(nombre)
-    setMsg(res.ok ? '¡SENSOR REGISTRADO! EL COMISARIO LO ORDENARÁ EN PISTA.' : res.motivo)
-    if (res.ok) setNombre('')
-  }
-
-  return (
-    <div className="panel stack">
-      <h2>REGISTRAR SENSOR</h2>
-      <input className="input" placeholder='NOMBRE (EJ: "META (JUAN)")' value={nombre} onChange={(e) => setNombre(e.target.value)} />
-      <button className="btn btn--primary" disabled={!nombre} onClick={registrar}>REGISTRAR</button>
-      {msg && <div className="text-dim">{msg}</div>}
     </div>
   )
 }

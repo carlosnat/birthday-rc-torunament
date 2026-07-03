@@ -6,6 +6,45 @@
 }
 .eq h1 { font-size: 20px; letter-spacing: 1px; }
 
+.input {
+  font-family: var(--font);
+  text-transform: uppercase;
+  background: var(--bg-elev-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-2) var(--sp-3);
+  font-size: 16px;
+  width: 100%;
+}
+
+.btn.sel { border-color: var(--text); }
+
+.color-pick {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+}
+.color-pick.sel { border-color: var(--text); }
+
+.equipo-pick {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-2) var(--sp-3);
+  color: var(--text);
+  font-family: var(--font);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.equipo-pick.sel { border-color: var(--text); }
+
 .eq-top {
   display: flex;
   justify-content: space-between;

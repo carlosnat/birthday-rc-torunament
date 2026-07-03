@@ -16,7 +16,7 @@ import TablaPuntos from '../../components/TablaPuntos.jsx'
 import { clasificar, vueltaRapida } from '../../domain/classification.js'
 import { puntosAcumulados, calcularGaps } from '../../domain/standings.js'
 import { TORNEO, SESION } from '../../domain/constants.js'
-import { urlRegistro } from '../../currentTorneo.js'
+import { urlRol } from '../../currentTorneo.js'
 import { unlockAudio } from '../../utils/audio.js'
 import './publico.css'
 
@@ -80,12 +80,12 @@ function VistaRegistro({ torneo, equipos }) {
         <div>
           <div className="pub-registro-cta">ESCANEÁ Y SUMATE</div>
           <div className="pub-dim">ALTA DE EQUIPOS</div>
-          <QRRegistro url={urlRegistro('equipo')} size={320} />
+          <QRRegistro url={urlRol('equipo')} size={320} />
         </div>
         <div>
           <div className="pub-registro-cta">ESCANEÁ Y SUMATE</div>
           <div className="pub-dim">ALTA DE SENSORES</div>
-          <QRRegistro url={urlRegistro('sensor')} size={320} />
+          <QRRegistro url={urlRol('sensor')} size={320} />
         </div>
       </div>
       <div className="pub-registro-equipos">

@@ -11,6 +11,7 @@ import { COLORES_LISTA, getColor } from '../../domain/colors.js'
 import { TORNEO_ID } from '../../currentTorneo.js'
 import * as R from '../../firebase/registroActions.js'
 import { pasadaPorColor } from '../../firebase/raceActions.js'
+import RegistroSensor from './RegistroSensor.jsx'
 import './sensor.css'
 
 const MAX_LOG = 20
@@ -21,7 +22,6 @@ export default function Sensor() {
   const [threshold, setThreshold] = useState(800)
   const [log, setLog] = useState([])
   const [sensorId, setSensorId] = useState(() => (LS_KEY ? localStorage.getItem(LS_KEY) : null))
-  const [nombre, setNombre] = useState('')
   const [bateria, setBateria] = useState(null)
 
   const sensorInfo = sensorId ? torneo?.sensores?.[sensorId] : null
@@ -67,14 +67,6 @@ export default function Sensor() {
     return () => clearInterval(id)
   }, [sensorId, running])
 
-  async function registrar() {
-    const res = await R.registrarSensor(nombre)
-    if (res.ok) {
-      localStorage.setItem(LS_KEY, res.sensorId)
-      setSensorId(res.sensorId)
-    }
-  }
-
   const maxPix = Math.max(threshold * 1.5, ...COLORES_LISTA.map((c) => stats.pixels[c.id] || 0))
   const sesionActiva = torneo?.sesionActiva ? torneo.sesiones?.[torneo.sesionActiva] : null
 
@@ -86,12 +78,10 @@ export default function Sensor() {
       </div>
 
       {TORNEO_ID && !registrado && (
-        <div className="panel stack">
-          <h2>REGISTRAR ESTE SENSOR</h2>
-          <input className="input" placeholder='NOMBRE (EJ: "META")' value={nombre} onChange={(e) => setNombre(e.target.value)} />
-          <button className="btn btn--primary" disabled={!nombre} onClick={registrar}>REGISTRAR</button>
-          <div className="text-dim">EL PRIMER SENSOR (ORDEN 0) ES LA META Y CUENTA VUELTAS.</div>
-        </div>
+        <RegistroSensor onListo={(id) => {
+          if (LS_KEY) localStorage.setItem(LS_KEY, id)
+          setSensorId(id)
+        }} />
       )}
 
       {registrado && (

@@ -39,15 +39,6 @@ export function urlRol(rol, t = TORNEO_ID) {
   return `${publicOrigin()}/?${p.toString()}`
 }
 
-/** Construye una URL absoluta para el registro por QR, separando equipo y sensor. */
-export function urlRegistro(kind, t = TORNEO_ID) {
-  const p = new URLSearchParams()
-  if (t) p.set('t', t)
-  p.set('rol', 'registro')
-  if (kind) p.set('kind', kind)
-  return `${publicOrigin()}/?${p.toString()}`
-}
-
 /** Navega (recarga) a un rol/torneo dado. */
 export function irA(rol, t = TORNEO_ID) {
   window.location.search = new URLSearchParams({ ...(t ? { t } : {}), rol }).toString()

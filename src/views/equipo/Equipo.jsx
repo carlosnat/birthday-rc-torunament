@@ -13,6 +13,7 @@ import { getColor } from '../../domain/colors.js'
 import { SESION, CARRITO } from '../../domain/constants.js'
 import { TORNEO_ID } from '../../currentTorneo.js'
 import * as A from '../../firebase/raceActions.js'
+import RegistroEquipo from './RegistroEquipo.jsx'
 import './equipo.css'
 
 const LS_KEY = TORNEO_ID ? `equipo:${TORNEO_ID}` : null
@@ -32,7 +33,15 @@ export default function Equipo() {
   const miEquipo = eqId ? equipos[eqId] : null
 
   if (!miEquipo) {
-    return <SelectorEquipo equipos={equipos} onElegir={(id) => { if (LS_KEY) localStorage.setItem(LS_KEY, id); setEqId(id) }} />
+    return (
+      <RegistroEquipo
+        torneo={torneo}
+        onListo={(id) => {
+          if (LS_KEY) localStorage.setItem(LS_KEY, id)
+          setEqId(id)
+        }}
+      />
+    )
   }
 
   const color = getColor(miEquipo.color)
@@ -116,17 +125,3 @@ function Piloto({ torneo, eqId, equipo, sesion }) {
   )
 }
 
-function SelectorEquipo({ equipos, onElegir }) {
-  const lista = Object.entries(equipos)
-  return (
-    <div className="app eq stack">
-      <h1>ELEGÍ TU EQUIPO</h1>
-      {lista.length === 0 && <div className="text-dim">NO HAY EQUIPOS REGISTRADOS TODAVÍA.</div>}
-      {lista.map(([id, eq]) => (
-        <button key={id} className="eq-elegir" onClick={() => onElegir(id)}>
-          <ColorBadge colorId={eq.color} nombre={eq.nombre} />
-        </button>
-      ))}
-    </div>
-  )
-}

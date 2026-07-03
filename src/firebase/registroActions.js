@@ -44,7 +44,7 @@ export async function unirseEquipo(torneo, eqId, participante) {
   const participantes = [...(eq.participantes || []), participante.trim()]
   await writePath(`${P.equipo(T, eqId)}/participantes`, participantes)
   await logEvento(T, 'PARTICIPANTE', { equipo: eqId, nombre: participante.trim() })
-  return { ok: true }
+  return { ok: true, eqId }
 }
 
 /** Registra un sensor en la pista. Queda al final de la lista (orden = posición). */
