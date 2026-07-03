@@ -1,15 +1,14 @@
 // src/firebase/tournamentDb.js
-// Operaciones de lectura/escritura sobre la RTDB. Primitivas + seed.
-// La lógica de negocio (transiciones, cronometraje) vive en domain/ y se orquesta
-// en raceActions.js. Aquí solo se persiste.
+// Operaciones de lectura/escritura sobre la RTDB. Primitivas + creación de torneos.
+// La lógica de negocio vive en domain/ y se orquesta en raceActions.js / registroActions.js.
 
 import { ref, set, update, get, push, remove, serverTimestamp } from 'firebase/database'
 import { db } from './firebase.js'
 import * as P from './paths.js'
 import { TORNEO, CIRCUITO, SESION } from '../domain/constants.js'
-import { carritoInicial } from '../domain/lapTiming.js'
 import { defSesion } from '../domain/progression.js'
-import { TORNEO_ID, CONFIG_DEMO, EQUIPOS_DEMO } from './seed.js'
+import { TORNEO_ID } from '../currentTorneo.js'
+import { DEFAULT_CONFIG, EQUIPOS_DEMO } from './seed.js'
 
 // --- primitivas --------------------------------------------------------------
 
@@ -19,6 +18,11 @@ export function writePath(path, value) {
 
 export function updatePath(path, value) {
   return update(ref(db, path), value)
+}
+
+/** Push a una lista; devuelve la referencia (tiene .key con el id generado). */
+export function pushPath(path, value) {
+  return push(ref(db, path), value)
 }
 
 export async function readPath(path) {
@@ -36,14 +40,10 @@ export function logEvento(t, tipo, detalle = {}) {
   })
 }
 
-// --- seed --------------------------------------------------------------------
+// --- construcción de torneo --------------------------------------------------
 
-/** Construye una sesión inicial (ESPERANDO) con un carrito EN_GRILLA por equipo. */
-function sesionInicial(config, equiposMap, def) {
-  const carritos = {}
-  for (const eqId of Object.keys(equiposMap)) {
-    carritos[eqId] = carritoInicial()
-  }
+/** Sesión inicial (ESPERANDO). Los carritos se crean al comenzar el torneo, desde los equipos registrados. */
+function sesionInicial(config, def) {
   return {
     estado: SESION.ESPERANDO,
     tipo: def.tipo,
@@ -51,42 +51,50 @@ function sesionInicial(config, equiposMap, def) {
     circuitoId: def.circuitoId,
     tiempoMinimoVuelta: def.tiempoMinimoVuelta,
     pilotos: {},
-    carritos,
     resultados: [],
   }
 }
 
-/** Crea el torneo de prueba completo en BORRADOR. Sobrescribe lo anterior. */
-export async function seedTorneo() {
-  const t = TORNEO_ID
+function construirArbol(config, equipos) {
   const circuitos = {}
   const sesiones = {}
-
-  for (const c of CONFIG_DEMO.circuitos) {
+  for (const c of config.circuitos) {
     circuitos[c.id] = { estado: CIRCUITO.PENDIENTE, nombre: c.nombre }
     for (const s of c.sesiones) {
-      const def = defSesion(CONFIG_DEMO, s.id)
-      sesiones[s.id] = sesionInicial(CONFIG_DEMO, EQUIPOS_DEMO, def)
+      sesiones[s.id] = sesionInicial(config, defSesion(config, s.id))
     }
   }
-
-  const arbol = {
-    config: CONFIG_DEMO,
+  return {
+    config,
     estado: TORNEO.BORRADOR,
     circuitoActivo: null,
     sesionActiva: null,
     circuitos,
-    equipos: EQUIPOS_DEMO,
+    equipos: equipos || null,
+    sensores: null,
     sesiones,
     eventos: null,
   }
+}
 
+/** Crea un torneo VACÍO (sin equipos) listo para registro por QR, directamente en REGISTRO. */
+export async function crearTorneo(t = TORNEO_ID, config = DEFAULT_CONFIG) {
+  const arbol = construirArbol(config, null)
+  arbol.estado = TORNEO.REGISTRO
   await writePath(P.torneo(t), arbol)
-  await logEvento(t, 'SEED', { nombre: CONFIG_DEMO.nombre })
+  await logEvento(t, 'TORNEO_CREADO', { nombre: config.nombre })
   return t
 }
 
-/** Borra el torneo de prueba por completo. */
-export function resetTorneo() {
-  return remove(ref(db, P.torneo(TORNEO_ID)))
+/** Crea un torneo DEMO con equipos hardcodeados (prueba rápida de la máquina de estados). */
+export async function seedTorneoDemo(t = TORNEO_ID, config = DEFAULT_CONFIG) {
+  const arbol = construirArbol(config, EQUIPOS_DEMO)
+  await writePath(P.torneo(t), arbol)
+  await logEvento(t, 'SEED_DEMO', { nombre: config.nombre })
+  return t
+}
+
+/** Borra el torneo por completo. */
+export function resetTorneo(t = TORNEO_ID) {
+  return remove(ref(db, P.torneo(t)))
 }

@@ -4,8 +4,10 @@
 
 import { useTorneo } from '../../context/TournamentContext.jsx'
 import ColorBadge from '../../components/ColorBadge.jsx'
+import QRRegistro from '../../components/QRRegistro.jsx'
 import { clasificar } from '../../domain/classification.js'
-import { CARRITO } from '../../domain/constants.js'
+import { CARRITO, TORNEO } from '../../domain/constants.js'
+import { urlRol } from '../../currentTorneo.js'
 
 export default function PublicoEspejo() {
   const { torneo, loading } = useTorneo()
@@ -14,6 +16,7 @@ export default function PublicoEspejo() {
 
   const s = torneo.sesionActiva ? torneo.sesiones?.[torneo.sesionActiva] : null
   const orden = s ? clasificar(s.carritos, s.tipo, torneo.config.puntuacion) : []
+  const equipos = Object.entries(torneo.equipos || {})
 
   return (
     <div className="app stack">
@@ -21,6 +24,30 @@ export default function PublicoEspejo() {
         <h1>{torneo.config?.nombre}</h1>
         <span className="chip-estado">{torneo.estado}</span>
       </div>
+
+      {torneo.estado === TORNEO.REGISTRO && (
+        <div className="grid-2">
+          <div className="panel">
+            <h2>ESCANEÁ PARA REGISTRARTE</h2>
+            <QRRegistro url={urlRol('registro')} size={260} />
+          </div>
+          <div className="panel">
+            <h2>EQUIPOS ANOTADOS ({equipos.length})</h2>
+            <div className="stack" style={{ gap: 6 }}>
+              {equipos.length === 0 && <span className="text-dim">TODAVÍA NADIE…</span>}
+              {equipos.map(([id, eq]) => (
+                <div key={id} className="row" style={{ justifyContent: 'space-between' }}>
+                  <ColorBadge colorId={eq.color} nombre={eq.nombre} />
+                  <span className="text-dim">{(eq.participantes || []).length} INT.</span>
+                </div>
+              ))}
+            </div>
+            <div className="text-dim" style={{ marginTop: 8 }}>
+              SENSORES: {Object.keys(torneo.sensores || {}).length}
+            </div>
+          </div>
+        </div>
+      )}
 
       {s && (
         <div className="panel">

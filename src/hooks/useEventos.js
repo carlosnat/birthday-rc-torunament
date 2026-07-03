@@ -5,12 +5,13 @@ import { useEffect, useState } from 'react'
 import { ref, query, limitToLast, onValue } from 'firebase/database'
 import { db } from '../firebase/firebase.js'
 import * as P from '../firebase/paths.js'
-import { TORNEO_ID } from '../firebase/seed.js'
+import { TORNEO_ID } from '../currentTorneo.js'
 
 export function useEventos(n = 40) {
   const [eventos, setEventos] = useState([])
 
   useEffect(() => {
+    if (!TORNEO_ID) return
     const r = query(ref(db, P.eventos(TORNEO_ID)), limitToLast(n))
     const unsub = onValue(r, (snap) => {
       const val = snap.val() || {}

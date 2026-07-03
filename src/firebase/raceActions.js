@@ -4,11 +4,11 @@
 // el estado real, y escribe en RTDB. Los componentes NO reimplementan reglas.
 
 import * as P from './paths.js'
-import { TORNEO_ID } from './seed.js'
+import { TORNEO_ID } from '../currentTorneo.js'
 import { writePath, updatePath, logEvento } from './tournamentDb.js'
 import { TORNEO, CIRCUITO, SESION, CARRITO } from '../domain/constants.js'
 import { puedeTorneo, puedeSesion, puedeCircuito } from '../domain/stateMachine.js'
-import { registrarPasada } from '../domain/lapTiming.js'
+import { registrarPasada, carritoInicial } from '../domain/lapTiming.js'
 import { clasificar } from '../domain/classification.js'
 import { siguientePaso } from '../domain/progression.js'
 
@@ -34,11 +34,24 @@ export async function irARegistro(torneo) {
   await logEvento(T, 'TORNEO_REGISTRO')
 }
 
-/** REGISTRO -> EN_CURSO y activa el primer circuito/sesión. */
+/** REGISTRO -> EN_CURSO. Cierra el registro, arma las grillas y activa el primer circuito/sesión. */
 export async function comenzarTorneo(torneo) {
   if (!puedeTorneo(torneo.estado, TORNEO.EN_CURSO)) return rechazo('TORNEO_TRANSICION', { desde: torneo.estado })
+
+  const equiposIds = Object.keys(torneo.equipos || {})
+  if (equiposIds.length < 2) return rechazo('POCOS_EQUIPOS', { registrados: equiposIds.length })
+
   const primerCircuito = torneo.config.circuitos[0]
   const primeraSesion = primerCircuito.sesiones[0]
+
+  // Arma la grilla (carritos EN_GRILLA) de cada sesión con los equipos registrados.
+  const grilla = {}
+  equiposIds.forEach((eq) => { grilla[eq] = carritoInicial() })
+  for (const c of torneo.config.circuitos) {
+    for (const s of c.sesiones) {
+      await writePath(P.carritos(T, s.id), grilla)
+    }
+  }
 
   await updatePath(P.torneo(T), {
     estado: TORNEO.EN_CURSO,
@@ -46,7 +59,7 @@ export async function comenzarTorneo(torneo) {
     sesionActiva: primeraSesion.id,
   })
   await writePath(P.circuitoEstado(T, primerCircuito.id), CIRCUITO.ACTIVO)
-  await logEvento(T, 'TORNEO_EN_CURSO', { circuito: primerCircuito.id, sesion: primeraSesion.id })
+  await logEvento(T, 'TORNEO_EN_CURSO', { circuito: primerCircuito.id, sesion: primeraSesion.id, equipos: equiposIds.length })
 }
 
 // --- SESIÓN ------------------------------------------------------------------

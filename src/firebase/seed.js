@@ -1,13 +1,12 @@
 // src/firebase/seed.js
-// Torneo de prueba hardcodeado para el Hito 1 (walking skeleton).
-// 2 circuitos, 4 equipos (uno por color) para ejercitar los puntos 25-18-15-12.
+// Config por defecto de un torneo (circuitos + sesiones) y datos demo opcionales.
+// Los equipos se registran de forma dinámica (Hito 2), no vienen hardcodeados.
 
 import { PUNTUACION_F1, TIPO_SESION } from '../domain/constants.js'
 
-export const TORNEO_ID = 'demo'
-
 // Config del torneo: circuitos con sus sesiones (tipo + vueltas objetivo).
-export const CONFIG_DEMO = {
+// Por ahora es una plantilla fija; el editor de config será un hito posterior.
+export const DEFAULT_CONFIG = {
   nombre: 'GP CUMPLE RC',
   modalidad: 'TORNEO',
   puntuacion: PUNTUACION_F1,

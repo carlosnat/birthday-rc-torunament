@@ -6,9 +6,11 @@ import { useState } from 'react'
 import { useTorneo } from '../../context/TournamentContext.jsx'
 import { useEventos } from '../../hooks/useEventos.js'
 import ColorBadge from '../../components/ColorBadge.jsx'
-import { seedTorneo, resetTorneo } from '../../firebase/tournamentDb.js'
+import QRRegistro from '../../components/QRRegistro.jsx'
+import { seedTorneoDemo, crearTorneo, resetTorneo } from '../../firebase/tournamentDb.js'
 import * as A from '../../firebase/raceActions.js'
 import { TORNEO, SESION, CARRITO } from '../../domain/constants.js'
+import { urlRol } from '../../currentTorneo.js'
 import './harness.css'
 
 export default function Harness() {
@@ -20,10 +22,11 @@ export default function Harness() {
     return (
       <div className="app stack">
         <h1>RC RACE TIMING — HARNESS</h1>
-        <p className="text-dim">No hay torneo de prueba en la RTDB.</p>
-        <button className="btn btn--primary" onClick={() => seedTorneo()}>
-          SEED TORNEO DE PRUEBA
-        </button>
+        <p className="text-dim">NO HAY TORNEO EN ESTA URL.</p>
+        <div className="row">
+          <button className="btn btn--primary" onClick={() => crearTorneo()}>CREAR (REGISTRO POR QR)</button>
+          <button className="btn" onClick={() => seedTorneoDemo()}>SEED DEMO (EQUIPOS DE PRUEBA)</button>
+        </div>
       </div>
     )
   }
@@ -33,7 +36,7 @@ export default function Harness() {
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <h1>{torneo.config?.nombre} — HARNESS</h1>
         <div className="row">
-          <button className="btn btn--ghost" onClick={() => seedTorneo()}>RE-SEED</button>
+          <button className="btn btn--ghost" onClick={() => seedTorneoDemo()}>RE-SEED DEMO</button>
           <button className="btn btn--ghost" onClick={() => resetTorneo()}>RESET</button>
         </div>
       </div>
@@ -42,6 +45,7 @@ export default function Harness() {
         <div className="stack">
           <Cabecera torneo={torneo} />
           <TorneoControles torneo={torneo} />
+          {torneo.estado === TORNEO.REGISTRO && <RegistroPanel torneo={torneo} />}
           <SesionControles torneo={torneo} />
           <Pilotos torneo={torneo} />
           <Carritos torneo={torneo} />
@@ -49,6 +53,29 @@ export default function Harness() {
           <Circuitos torneo={torneo} />
         </div>
         <LogEventos />
+      </div>
+    </div>
+  )
+}
+
+function RegistroPanel({ torneo }) {
+  const equipos = Object.entries(torneo.equipos || {})
+  const sensores = Object.entries(torneo.sensores || {})
+  return (
+    <div className="panel">
+      <h2>REGISTRO POR QR</h2>
+      <div className="row" style={{ alignItems: 'flex-start', gap: 16 }}>
+        <QRRegistro url={urlRol('registro')} size={160} />
+        <div className="stack" style={{ gap: 4 }}>
+          <div className="text-dim">EQUIPOS ({equipos.length})</div>
+          {equipos.map(([id, eq]) => (
+            <ColorBadge key={id} colorId={eq.color} nombre={`${eq.nombre} · ${(eq.participantes || []).length}`} />
+          ))}
+          <div className="text-dim" style={{ marginTop: 8 }}>SENSORES ({sensores.length})</div>
+          {sensores.map(([id, s]) => (
+            <span key={id} className="chip-estado">{s.orden}· {s.nombre}</span>
+          ))}
+        </div>
       </div>
     </div>
   )

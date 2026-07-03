@@ -84,3 +84,25 @@ table.tabla th { color: var(--text-dim); font-weight: 400; }
 .log-item { animation: aparecer 0.15s ease; }
 .log-item--rechazo { color: var(--rojo-f1); }
 .log-time { color: var(--text-dim); }
+
+.qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  background: #fff;
+  padding: var(--sp-3);
+  border-radius: var(--radius);
+}
+.qr-url {
+  color: #0a0a0a;
+  font-size: 11px;
+  word-break: break-all;
+  max-width: 260px;
+  text-align: center;
+}
+
+/* utilidades de texto */
+.text-dim { color: var(--text-dim); }
+.text-rojo { color: var(--rojo-f1); font-weight: 700; }
+.text-morado { color: var(--morado); font-weight: 700; }

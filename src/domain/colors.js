@@ -36,3 +36,9 @@ export const COLORES_LISTA = Object.freeze(Object.values(COLORES))
 export function getColor(id) {
   return COLORES[id] || null
 }
+
+/** Colores todavía libres: los que ningún equipo tomó como identidad. */
+export function coloresDisponibles(equiposMap) {
+  const tomados = new Set(Object.values(equiposMap || {}).map((e) => e.color))
+  return COLORES_LISTA.filter((c) => !tomados.has(c.id))
+}

@@ -22,6 +22,9 @@ export const circuitoEstado = (t, cid) => `torneos/${t}/circuitos/${cid}/estado`
 export const equipos = (t) => `torneos/${t}/equipos`
 export const equipo = (t, eq) => `torneos/${t}/equipos/${eq}`
 
+export const sensores = (t) => `torneos/${t}/sensores`
+export const sensor = (t, sid) => `torneos/${t}/sensores/${sid}`
+
 export const sesiones = (t) => `torneos/${t}/sesiones`
 export const sesion = (t, s) => `torneos/${t}/sesiones/${s}`
 export const sesionEstado = (t, s) => `torneos/${t}/sesiones/${s}/estado`
