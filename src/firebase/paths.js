@@ -10,6 +10,7 @@
 //     eventos/{pushId} { ts, tipo, detalle }
 
 export const torneo = (t) => `torneos/${t}`
+export const torneosIndex = () => 'torneosIndex'
 export const config = (t) => `torneos/${t}/config`
 export const estado = (t) => `torneos/${t}/estado`
 export const circuitoActivo = (t) => `torneos/${t}/circuitoActivo`

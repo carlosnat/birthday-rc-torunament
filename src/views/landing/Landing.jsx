@@ -1,35 +1,111 @@
 // src/views/landing/Landing.jsx
-// Pantalla inicial cuando la URL no trae ?t. Permite crear un torneo (uuid) y entrar.
+// Pantalla inicial cuando la URL no trae ?t. Muestra una grilla de torneos creados
+// y una tarjeta '+' para abrir el formulario de alta.
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { onValue, ref } from 'firebase/database'
+import { db } from '../../firebase/firebase.js'
+import * as P from '../../firebase/paths.js'
 import { nuevoTorneoId, irA } from '../../currentTorneo.js'
 import { crearTorneo, seedTorneoDemo } from '../../firebase/tournamentDb.js'
+import CreateTournamentForm from './CreateTournamentForm.jsx'
+import './landing.css'
 
 export default function Landing() {
   const [creando, setCreando] = useState(false)
+  const [mostrarFormulario, setMostrarFormulario] = useState(false)
+  const [torneosIndex, setTorneosIndex] = useState({})
 
-  async function crear(demo) {
+  useEffect(() => {
+    const r = ref(db, P.torneosIndex())
+    const unsub = onValue(r, (snap) => {
+      setTorneosIndex(snap.val() || {})
+    })
+    return () => unsub()
+  }, [])
+
+  const torneosOrdenados = useMemo(
+    () =>
+      Object.entries(torneosIndex)
+        .map(([id, torneo]) => ({ id, ...torneo }))
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)),
+    [torneosIndex],
+  )
+
+  async function crear(demo, config) {
     setCreando(true)
-    const t = nuevoTorneoId()
-    if (demo) await seedTorneoDemo(t)
-    else await crearTorneo(t)
-    irA(demo ? 'harness' : 'publico', t)
+    try {
+      const t = nuevoTorneoId()
+      if (demo) {
+        await seedTorneoDemo(t)
+        irA('harness', t)
+        return
+      }
+      await crearTorneo(t, config)
+      irA('publico', t)
+    } finally {
+      setCreando(false)
+    }
   }
 
   return (
-    <div className="app stack">
+    <div className="app stack landing">
       <h1>RC RACE TIMING</h1>
-      <div className="panel stack">
-        <h2>NUEVO TORNEO</h2>
-        <button className="btn btn--primary" disabled={creando} onClick={() => crear(false)}>
-          CREAR TORNEO (REGISTRO POR QR)
+
+      <div className="landing-grid">
+        <button
+          type="button"
+          className="landing-tile landing-tile--create"
+          onClick={() => setMostrarFormulario(true)}
+        >
+          <span className="landing-plus">+</span>
+          <span className="landing-tile-text">CREAR TORNEO</span>
         </button>
-        <button className="btn" disabled={creando} onClick={() => crear(true)}>
+
+        {torneosOrdenados.length === 0 ? (
+          <div className="landing-empty panel">
+            <h2>TORNEOS CREADOS</h2>
+            <p className="text-dim">AÚN NO HAY TORNEOS REGISTRADOS.</p>
+          </div>
+        ) : (
+          torneosOrdenados.map((torneo) => (
+            <article key={torneo.id} className="landing-tile landing-tile--torneo">
+              <div className="landing-tile-top">
+                <h3>{torneo.nombre}</h3>
+                {torneo.demo && <span className="landing-badge">DEMO</span>}
+              </div>
+              <div className="landing-tile-meta">{torneo.circuitoCount} CIRCUITOS · {torneo.sesionesCount} SESIONES</div>
+              <div className="landing-tile-meta text-dim">{torneo.estado}</div>
+              <button className="btn btn--ghost" onClick={() => irA('publico', torneo.id)}>
+                ABRIR
+              </button>
+            </article>
+          ))
+        )}
+      </div>
+
+      {mostrarFormulario && (
+        <CreateTournamentForm
+          creating={creando}
+          onCancel={() => setMostrarFormulario(false)}
+          onCreate={async (config) => {
+            await crear(false, config)
+          }}
+        />
+      )}
+
+      <div className="row landing-actions">
+        <button
+          className="btn"
+          disabled={creando}
+          onClick={() => crear(true)}
+        >
           TORNEO DEMO (EQUIPOS DE PRUEBA)
         </button>
       </div>
+
       <div className="panel text-dim">
-        ABRÍ UN TORNEO EXISTENTE CON ?t=UUID&rol=harness|publico|registro EN LA URL.
+        ABRÍ UN TORNEO EXISTENTE CON ?t=UUID&rol=harness|publico|registro|comisario|equipo|sensor EN LA URL.
       </div>
     </div>
   )

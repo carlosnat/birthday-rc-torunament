@@ -77,11 +77,29 @@ function construirArbol(config, equipos) {
   }
 }
 
+function resumenTorneo(t = TORNEO_ID, config, extra = {}) {
+  return {
+    nombre: config.nombre,
+    estado: extra.estado || TORNEO.BORRADOR,
+    circuitoCount: config.circuitos.length,
+    sesionesCount: config.circuitos.reduce((total, circuito) => total + (circuito.sesiones?.length || 0), 0),
+    createdAt: extra.createdAt || Date.now(),
+    updatedAt: extra.updatedAt || Date.now(),
+    demo: Boolean(extra.demo),
+    url: `${window.location.origin}/?t=${t}&rol=publico`,
+  }
+}
+
+async function writeIndex(t, config, extra = {}) {
+  await writePath(`${P.torneosIndex()}/${t}`, resumenTorneo(t, config, extra))
+}
+
 /** Crea un torneo VACÍO (sin equipos) listo para registro por QR, directamente en REGISTRO. */
 export async function crearTorneo(t = TORNEO_ID, config = DEFAULT_CONFIG) {
   const arbol = construirArbol(config, null)
   arbol.estado = TORNEO.REGISTRO
   await writePath(P.torneo(t), arbol)
+  await writeIndex(t, config, { estado: TORNEO.REGISTRO })
   await logEvento(t, 'TORNEO_CREADO', { nombre: config.nombre })
   return t
 }
@@ -90,11 +108,15 @@ export async function crearTorneo(t = TORNEO_ID, config = DEFAULT_CONFIG) {
 export async function seedTorneoDemo(t = TORNEO_ID, config = DEFAULT_CONFIG) {
   const arbol = construirArbol(config, EQUIPOS_DEMO)
   await writePath(P.torneo(t), arbol)
+  await writeIndex(t, config, { estado: TORNEO.BORRADOR, demo: true })
   await logEvento(t, 'SEED_DEMO', { nombre: config.nombre })
   return t
 }
 
 /** Borra el torneo por completo. */
 export function resetTorneo(t = TORNEO_ID) {
-  return remove(ref(db, P.torneo(t)))
+  return Promise.all([
+    remove(ref(db, P.torneo(t))),
+    remove(ref(db, `${P.torneosIndex()}/${t}`)),
+  ])
 }

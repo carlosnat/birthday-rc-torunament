@@ -12,7 +12,10 @@ export const ROL = params.get('rol') || 'harness'
 
 /** Genera un uuid nuevo para un torneo. */
 export function nuevoTorneoId() {
-  return crypto.randomUUID()
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`
 }
 
 /**
