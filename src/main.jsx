@@ -12,6 +12,7 @@ import PublicoEspejo from './views/publico/PublicoEspejo.jsx'
 import Registro from './views/registro/Registro.jsx'
 import Sensor from './views/sensor/Sensor.jsx'
 import Comisario from './views/comisario/Comisario.jsx'
+import Equipo from './views/equipo/Equipo.jsx'
 
 import './styles/tokens.css'
 import './styles/layout.css'
@@ -24,6 +25,7 @@ const VISTAS = {
   registro: Registro,
   sensor: Sensor,
   comisario: Comisario,
+  equipo: Equipo,
 }
 
 // El sensor (Hito 3a) funciona sin ?t (aún no escribe en RTDB); el resto necesita torneo.
