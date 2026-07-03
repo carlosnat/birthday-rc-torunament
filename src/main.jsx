@@ -7,6 +7,7 @@ import { TournamentProvider } from './context/TournamentContext.jsx'
 import { TORNEO_ID, ROL } from './currentTorneo.js'
 import Landing from './views/landing/Landing.jsx'
 import Harness from './views/harness/Harness.jsx'
+import Publico from './views/publico/Publico.jsx'
 import PublicoEspejo from './views/publico/PublicoEspejo.jsx'
 import Registro from './views/registro/Registro.jsx'
 import Sensor from './views/sensor/Sensor.jsx'
@@ -18,7 +19,8 @@ import './styles/components.css'
 
 const VISTAS = {
   harness: Harness,
-  publico: PublicoEspejo,
+  publico: Publico,
+  espejo: PublicoEspejo,
   registro: Registro,
   sensor: Sensor,
   comisario: Comisario,
