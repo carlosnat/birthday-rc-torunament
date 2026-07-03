@@ -42,7 +42,7 @@ export default function Landing() {
         return
       }
       await crearTorneo(t, config)
-      irA('publico', t)
+      irA('comisario', t)
     } finally {
       setCreando(false)
     }
@@ -76,7 +76,7 @@ export default function Landing() {
               </div>
               <div className="landing-tile-meta">{torneo.circuitoCount} CIRCUITOS · {torneo.sesionesCount} SESIONES</div>
               <div className="landing-tile-meta text-dim">{torneo.estado}</div>
-              <button className="btn btn--ghost" onClick={() => irA('publico', torneo.id)}>
+              <button className="btn btn--ghost" onClick={() => irA('comisario', torneo.id)}>
                 ABRIR
               </button>
             </article>

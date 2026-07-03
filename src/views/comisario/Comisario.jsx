@@ -11,7 +11,7 @@ import SensorHealth from '../../components/SensorHealth.jsx'
 import * as A from '../../firebase/raceActions.js'
 import { moverSensor } from '../../firebase/registroActions.js'
 import { TORNEO, SESION, CARRITO } from '../../domain/constants.js'
-import { urlRol } from '../../currentTorneo.js'
+import { urlRegistro } from '../../currentTorneo.js'
 import './comisario.css'
 
 export default function Comisario() {
@@ -64,7 +64,16 @@ function RegistroPanel({ torneo }) {
     <div className="panel">
       <h2>REGISTRO ABIERTO</h2>
       <div className="row" style={{ alignItems: 'flex-start', gap: 16 }}>
-        <QRRegistro url={urlRol('registro')} size={160} />
+        <div className="stack" style={{ gap: 10 }}>
+          <div>
+            <div className="text-dim">EQUIPO</div>
+            <QRRegistro url={urlRegistro('equipo')} size={160} />
+          </div>
+          <div>
+            <div className="text-dim">SENSOR</div>
+            <QRRegistro url={urlRegistro('sensor')} size={160} />
+          </div>
+        </div>
         <div className="stack" style={{ gap: 6, flex: 1 }}>
           <div className="text-dim">EQUIPOS ({equipos.length})</div>
           {equipos.map(([id, eq]) => (

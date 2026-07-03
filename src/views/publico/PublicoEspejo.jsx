@@ -7,7 +7,7 @@ import ColorBadge from '../../components/ColorBadge.jsx'
 import QRRegistro from '../../components/QRRegistro.jsx'
 import { clasificar } from '../../domain/classification.js'
 import { CARRITO, TORNEO } from '../../domain/constants.js'
-import { urlRol } from '../../currentTorneo.js'
+import { urlRegistro } from '../../currentTorneo.js'
 
 export default function PublicoEspejo() {
   const { torneo, loading } = useTorneo()
@@ -28,10 +28,14 @@ export default function PublicoEspejo() {
       {torneo.estado === TORNEO.REGISTRO && (
         <div className="grid-2">
           <div className="panel">
-            <h2>ESCANEÁ PARA REGISTRARTE</h2>
-            <QRRegistro url={urlRol('registro')} size={260} />
+            <h2>EQUIPOS</h2>
+            <QRRegistro url={urlRegistro('equipo')} size={260} />
           </div>
           <div className="panel">
+            <h2>SENSORES</h2>
+            <QRRegistro url={urlRegistro('sensor')} size={260} />
+          </div>
+          <div className="panel" style={{ gridColumn: '1 / -1' }}>
             <h2>EQUIPOS ANOTADOS ({equipos.length})</h2>
             <div className="stack" style={{ gap: 6 }}>
               {equipos.length === 0 && <span className="text-dim">TODAVÍA NADIE…</span>}

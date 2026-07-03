@@ -10,7 +10,7 @@ import QRRegistro from '../../components/QRRegistro.jsx'
 import { seedTorneoDemo, crearTorneo, resetTorneo } from '../../firebase/tournamentDb.js'
 import * as A from '../../firebase/raceActions.js'
 import { TORNEO, SESION, CARRITO } from '../../domain/constants.js'
-import { urlRol } from '../../currentTorneo.js'
+import { urlRegistro } from '../../currentTorneo.js'
 import './harness.css'
 
 export default function Harness() {
@@ -65,7 +65,16 @@ function RegistroPanel({ torneo }) {
     <div className="panel">
       <h2>REGISTRO POR QR</h2>
       <div className="row" style={{ alignItems: 'flex-start', gap: 16 }}>
-        <QRRegistro url={urlRol('registro')} size={160} />
+        <div className="stack" style={{ gap: 10 }}>
+          <div>
+            <div className="text-dim">EQUIPO</div>
+            <QRRegistro url={urlRegistro('equipo')} size={160} />
+          </div>
+          <div>
+            <div className="text-dim">SENSOR</div>
+            <QRRegistro url={urlRegistro('sensor')} size={160} />
+          </div>
+        </div>
         <div className="stack" style={{ gap: 4 }}>
           <div className="text-dim">EQUIPOS ({equipos.length})</div>
           {equipos.map(([id, eq]) => (
