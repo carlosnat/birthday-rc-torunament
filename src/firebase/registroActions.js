@@ -72,3 +72,20 @@ export function heartbeat(sensorId, { fps = null, bateria = null } = {}) {
     bateria,
   })
 }
+
+/** Reordena un sensor intercambiando su `orden` con el vecino (dir: -1 sube, +1 baja). */
+export async function moverSensor(sensoresMap, sensorId, dir) {
+  const ordenados = Object.entries(sensoresMap || {})
+    .map(([id, s]) => ({ id, ...s }))
+    .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+  const i = ordenados.findIndex((s) => s.id === sensorId)
+  const j = i + dir
+  if (i < 0 || j < 0 || j >= ordenados.length) return { ok: false, motivo: 'FUERA_DE_RANGO' }
+
+  const a = ordenados[i]
+  const b = ordenados[j]
+  await updatePath(P.sensor(T, a.id), { orden: b.orden })
+  await updatePath(P.sensor(T, b.id), { orden: a.orden })
+  await logEvento(T, 'SENSOR_REORDENADO', { sensor: a.id, orden: b.orden })
+  return { ok: true }
+}

@@ -1,0 +1,24 @@
+/* src/views/comisario/comisario.css */
+.input {
+  font-family: var(--font);
+  text-transform: uppercase;
+  background: var(--bg-elev-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-1) var(--sp-2);
+}
+
+.sensor-health {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-2);
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-2) var(--sp-3);
+  flex-wrap: wrap;
+}
+.dot-verde { background: var(--verde); }
+.dot-rojo { background: var(--rojo-f1); animation: parpadeo 1s infinite; }
