@@ -81,6 +81,11 @@
   font-weight: 700;
 }
 
+.landing-badge--reiniciado {
+  background: var(--verde);
+  color: #052;
+}
+
 .landing-empty {
   min-height: 180px;
   display: flex;

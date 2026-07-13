@@ -55,7 +55,7 @@ function sesionInicial(config, def) {
   }
 }
 
-function construirArbol(config, equipos) {
+function construirArbol(config, equipos, sensores) {
   const circuitos = {}
   const sesiones = {}
   for (const c of config.circuitos) {
@@ -71,7 +71,7 @@ function construirArbol(config, equipos) {
     sesionActiva: null,
     circuitos,
     equipos: equipos || null,
-    sensores: null,
+    sensores: sensores || null,
     sesiones,
     eventos: null,
   }
@@ -86,6 +86,8 @@ function resumenTorneo(t = TORNEO_ID, config, extra = {}) {
     createdAt: extra.createdAt || Date.now(),
     updatedAt: extra.updatedAt || Date.now(),
     demo: Boolean(extra.demo),
+    reiniciado: Boolean(extra.reiniciado),
+    origenTorneoId: extra.origenTorneoId || null,
     url: `${window.location.origin}/?t=${t}&rol=publico`,
   }
 }
@@ -94,19 +96,19 @@ async function writeIndex(t, config, extra = {}) {
   await writePath(`${P.torneosIndex()}/${t}`, resumenTorneo(t, config, extra))
 }
 
-/** Crea un torneo VACÍO (sin equipos) listo para registro por QR, directamente en REGISTRO. */
-export async function crearTorneo(t = TORNEO_ID, config = DEFAULT_CONFIG) {
-  const arbol = construirArbol(config, null)
-  arbol.estado = TORNEO.REGISTRO
+/** Crea un torneo listo para registro por QR, directamente en REGISTRO. */
+export async function crearTorneo(t = TORNEO_ID, config = DEFAULT_CONFIG, { equipos = null, sensores = null, estado = TORNEO.REGISTRO } = {}) {
+  const arbol = construirArbol(config, equipos, sensores)
+  arbol.estado = estado
   await writePath(P.torneo(t), arbol)
-  await writeIndex(t, config, { estado: TORNEO.REGISTRO })
+  await writeIndex(t, config, { estado })
   await logEvento(t, 'TORNEO_CREADO', { nombre: config.nombre })
   return t
 }
 
 /** Crea un torneo DEMO con equipos hardcodeados (prueba rápida de la máquina de estados). */
 export async function seedTorneoDemo(t = TORNEO_ID, config = DEFAULT_CONFIG) {
-  const arbol = construirArbol(config, EQUIPOS_DEMO)
+  const arbol = construirArbol(config, EQUIPOS_DEMO, null)
   await writePath(P.torneo(t), arbol)
   await writeIndex(t, config, { estado: TORNEO.BORRADOR, demo: true })
   await logEvento(t, 'SEED_DEMO', { nombre: config.nombre })

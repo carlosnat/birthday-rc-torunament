@@ -5,7 +5,9 @@
 
 import * as P from './paths.js'
 import { TORNEO_ID } from '../currentTorneo.js'
+import { nuevoTorneoId } from '../currentTorneo.js'
 import { writePath, updatePath, logEvento } from './tournamentDb.js'
+import { crearTorneo } from './tournamentDb.js'
 import { TORNEO, CIRCUITO, SESION, CARRITO } from '../domain/constants.js'
 import { puedeTorneo, puedeSesion, puedeCircuito } from '../domain/stateMachine.js'
 import { registrarPasada, carritoInicial } from '../domain/lapTiming.js'
@@ -32,6 +34,40 @@ export async function irARegistro(torneo) {
   if (!puedeTorneo(torneo.estado, TORNEO.REGISTRO)) return rechazo('TORNEO_TRANSICION', { desde: torneo.estado })
   await writePath(P.estado(T), TORNEO.REGISTRO)
   await logEvento(T, 'TORNEO_REGISTRO')
+}
+
+/** Clona un torneo finalizado en uno nuevo con UUID nuevo, reutilizando config/equipos/sensores. */
+export async function reiniciarTorneo(torneo) {
+  if (!torneo || torneo.estado !== TORNEO.FINALIZADO) {
+    return rechazo('TORNEO_TRANSICION', { desde: torneo?.estado })
+  }
+
+  const nuevoId = nuevoTorneoId()
+  await crearTorneo(nuevoId, torneo.config, {
+    equipos: torneo.equipos || null,
+    sensores: torneo.sensores || null,
+    estado: TORNEO.REGISTRO,
+  })
+  await writePath(`${P.torneosIndex()}/${nuevoId}`, {
+    nombre: torneo.config?.nombre,
+    estado: TORNEO.REGISTRO,
+    circuitoCount: torneo.config?.circuitos?.length || 0,
+    sesionesCount: torneo.config?.circuitos?.reduce((total, circuito) => total + (circuito.sesiones?.length || 0), 0) || 0,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    demo: false,
+    reiniciado: true,
+    origenTorneoId: T,
+    url: `${window.location.origin}/?t=${nuevoId}&rol=publico`,
+  })
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    window.sessionStorage.setItem('f1tournament.reinicio', JSON.stringify({
+      torneoId: nuevoId,
+      nombre: torneo.config?.nombre || '',
+    }))
+  }
+  await logEvento(nuevoId, 'TORNEO_REINICIADO', { desde: T, nombre: torneo.config?.nombre })
+  return { ok: true, nuevoId }
 }
 
 /** REGISTRO -> EN_CURSO. Cierra el registro, arma las grillas y activa el primer circuito/sesión. */

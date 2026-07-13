@@ -2,6 +2,7 @@
 // Hito 4: pantalla del comisario (laptop). Control total de la carrera.
 // Reusa raceActions (misma fuente de verdad que el harness/dominio).
 
+import { useEffect, useState } from 'react'
 import { useTorneo } from '../../context/TournamentContext.jsx'
 import { useEventos } from '../../hooks/useEventos.js'
 import { useNow } from '../../hooks/useNow.js'
@@ -11,11 +12,29 @@ import SensorHealth from '../../components/SensorHealth.jsx'
 import * as A from '../../firebase/raceActions.js'
 import { moverSensor } from '../../firebase/registroActions.js'
 import { TORNEO, SESION, CARRITO } from '../../domain/constants.js'
-import { urlRol } from '../../currentTorneo.js'
+import { TORNEO_ID, irA, urlRol } from '../../currentTorneo.js'
 import './comisario.css'
 
 export default function Comisario() {
   const { torneo, loading } = useTorneo()
+  const [reinicioNotice, setReinicioNotice] = useState(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.sessionStorage || !TORNEO_ID) return
+    const raw = window.sessionStorage.getItem('f1tournament.reinicio')
+    if (!raw) return
+    try {
+      const notice = JSON.parse(raw)
+      if (notice?.torneoId === TORNEO_ID) {
+        setReinicioNotice(notice)
+      }
+    } catch {
+      // ignore malformed sessionStorage payloads
+    } finally {
+      window.sessionStorage.removeItem('f1tournament.reinicio')
+    }
+  }, [TORNEO_ID])
+
   if (loading) return <div className="app">CARGANDO…</div>
   if (!torneo) return <div className="app">TORNEO NO ENCONTRADO</div>
 
@@ -25,6 +44,15 @@ export default function Comisario() {
         <h1>{torneo.config?.nombre} — COMISARIO</h1>
         <Cabecera torneo={torneo} />
       </div>
+
+      {reinicioNotice && (
+        <div className="panel" style={{ marginTop: 16 }}>
+          <h2>NUEVO TORNEO CREADO</h2>
+          <div className="text-dim">
+            SE REUTILIZÓ LA CONFIGURACIÓN DEL TORNEO ANTERIOR Y SE ABRIÓ UN UUID NUEVO PARA EMPEZAR DE CERO.
+          </div>
+        </div>
+      )}
 
       <div className="grid-2" style={{ marginTop: 16 }}>
         <div className="stack">
@@ -36,12 +64,31 @@ export default function Comisario() {
               <Monitor torneo={torneo} />
             </>
           )}
-          {torneo.estado === TORNEO.FINALIZADO && <div className="panel"><h2>🏁 TORNEO FINALIZADO</h2></div>}
+          {torneo.estado === TORNEO.FINALIZADO && <Finalizado torneo={torneo} />}
           <Resultados torneo={torneo} />
           <Sensores torneo={torneo} />
         </div>
         <LogEventos />
       </div>
+    </div>
+  )
+}
+
+function Finalizado({ torneo }) {
+  async function reiniciar() {
+    const ok = window.confirm('¿REINICIAR EL TORNEO Y CREAR UNO NUEVO CON LA MISMA CONFIGURACIÓN?')
+    if (!ok) return
+    const res = await A.reiniciarTorneo(torneo)
+    if (res?.ok && res.nuevoId) {
+      irA('comisario', res.nuevoId)
+    }
+  }
+
+  return (
+    <div className="panel stack">
+      <h2>🏁 TORNEO FINALIZADO</h2>
+      <div className="text-dim">CONFIG, EQUIPOS Y SENSORES SE REUTILIZAN EN UN TORNEO NUEVO.</div>
+      <button className="btn btn--primary" onClick={reiniciar}>REINICIAR TORNEO</button>
     </div>
   )
 }

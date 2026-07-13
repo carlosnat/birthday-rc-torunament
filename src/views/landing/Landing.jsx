@@ -72,9 +72,15 @@ export default function Landing() {
             <article key={torneo.id} className="landing-tile landing-tile--torneo">
               <div className="landing-tile-top">
                 <h3>{torneo.nombre}</h3>
-                {torneo.demo && <span className="landing-badge">DEMO</span>}
+                <div className="row" style={{ gap: 6, alignItems: 'center' }}>
+                  {torneo.demo && <span className="landing-badge">DEMO</span>}
+                  {torneo.reiniciado && <span className="landing-badge landing-badge--reiniciado">REINICIADO</span>}
+                </div>
               </div>
               <div className="landing-tile-meta">{torneo.circuitoCount} CIRCUITOS · {torneo.sesionesCount} SESIONES</div>
+              {torneo.reiniciado && torneo.origenTorneoId && (
+                <div className="landing-tile-meta text-dim">DESDE {torneo.origenTorneoId}</div>
+              )}
               <div className="landing-tile-meta text-dim">{torneo.estado}</div>
               <button className="btn btn--ghost" onClick={() => irA('comisario', torneo.id)}>
                 ABRIR
