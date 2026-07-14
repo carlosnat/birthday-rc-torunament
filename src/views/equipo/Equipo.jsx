@@ -4,7 +4,7 @@
 // posición, vueltas, última/mejor vuelta, gap y puntos. Cualquier miembro puede marcar
 // el piloto de la sesión (rotación).
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTorneo } from '../../context/TournamentContext.jsx'
 import ColorBadge from '../../components/ColorBadge.jsx'
 import { clasificar } from '../../domain/classification.js'
@@ -20,6 +20,19 @@ const LS_KEY = TORNEO_ID ? `equipo:${TORNEO_ID}` : null
 
 function fmt(ms) {
   return ms == null ? '—' : `${(ms / 1000).toFixed(2)}s`
+}
+
+function sesionesDelCircuito(torneo, circuitoId) {
+  const circuito = torneo?.config?.circuitos?.find((item) => item.id === circuitoId)
+  if (!circuito) return []
+
+  return (circuito.sesiones || [])
+    .map((def) => torneo?.sesiones?.[def.id])
+    .filter(Boolean)
+}
+
+function vueltasDeEquipo(sesion, eqId) {
+  return sesion?.carritos?.[eqId]?.lapHistory || []
 }
 
 export default function Equipo() {
@@ -52,6 +65,7 @@ export default function Equipo() {
   const carrito = s?.carritos?.[eqId]
   const standings = puntosAcumulados(torneo)
   const misPuntos = standings.find((x) => x.eqId === eqId)?.puntos ?? 0
+  const sesionesCircuito = s ? sesionesDelCircuito(torneo, s.circuitoId) : []
 
   const enCarrera = carrito?.estado === CARRITO.EN_CARRERA
   const vueltaActual = enCarrera ? (carrito.vueltas || 0) + 1 : carrito?.vueltas || 0
@@ -80,6 +94,24 @@ export default function Equipo() {
             <Metric label="PUNTOS" value={misPuntos} />
           </div>
 
+          <div className="eq-laps-panel">
+            <div className="eq-laps-header">
+              <div className="eq-laps-title">TIEMPOS POR SESIÓN</div>
+              <div className="eq-laps-subtitle">Vuelta por vuelta del circuito actual</div>
+            </div>
+
+            <div className="eq-laps-groups">
+              {sesionesCircuito.map((sesion) => (
+                <SesionVueltas
+                  key={sesion.id}
+                  sesion={sesion}
+                  eqId={eqId}
+                  activa={sesion.id === s.id}
+                />
+              ))}
+            </div>
+          </div>
+
           <Piloto torneo={torneo} eqId={eqId} equipo={miEquipo} sesion={s} />
         </>
       ) : (
@@ -89,6 +121,58 @@ export default function Equipo() {
         </div>
       )}
     </div>
+  )
+}
+
+function SesionVueltas({ sesion, eqId, activa }) {
+  const [abierta, setAbierta] = useState(() => activa)
+  const vueltas = vueltasDeEquipo(sesion, eqId)
+  const mejorVuelta = sesion?.carritos?.[eqId]?.mejorVuelta
+  const sinVueltas = vueltas.length === 0
+
+  useEffect(() => {
+    if (activa) setAbierta(true)
+  }, [activa])
+
+  return (
+    <section className={`eq-laps-session ${activa ? 'is-active' : ''}`}>
+      <div className="eq-laps-session-top">
+        <div>
+          <div className="eq-laps-session-title">{sesion.tipo}</div>
+          <div className="eq-laps-session-state">{sesion.estado}</div>
+        </div>
+        <div className="eq-laps-actions">
+          {activa && <span className="eq-laps-live">EN VIVO</span>}
+          <button
+            className="btn btn--ghost eq-laps-toggle"
+            type="button"
+            onClick={() => setAbierta((prev) => !prev)}
+            aria-expanded={abierta}
+          >
+            {abierta ? 'OCULTAR' : 'VER'}
+          </button>
+        </div>
+      </div>
+
+      {abierta && (
+        sinVueltas ? (
+          <div className="eq-laps-empty">Sin vueltas válidas todavía.</div>
+        ) : (
+          <div className="eq-laps-list">
+            {vueltas.map((vuelta) => {
+              const esMejor = mejorVuelta != null && vuelta.tiempoMs === mejorVuelta
+              return (
+                <div key={`${sesion.id}-${vuelta.vuelta}-${vuelta.ts}`} className={`eq-lap-row ${esMejor ? 'is-best' : ''}`}>
+                  <div className="eq-lap-index">V{vuelta.vuelta}</div>
+                  <div className="eq-lap-time">{fmt(vuelta.tiempoMs)}</div>
+                  <div className="eq-lap-flag">{esMejor ? 'BEST' : ''}</div>
+                </div>
+              )
+            })}
+          </div>
+        )
+      )}
+    </section>
   )
 }
 

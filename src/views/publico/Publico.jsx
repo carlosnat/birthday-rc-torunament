@@ -33,9 +33,13 @@ export default function Publico() {
   const gaps = calcularGaps(orden)
   const vr = s ? vueltaRapida(s.carritos) : null
   const standings = puntosAcumulados(torneo)
+  const sesionFinalizada = s?.estado === SESION.FINALIZADA
+  const mostrarConfeti = torneo.estado === TORNEO.FINALIZADO || sesionFinalizada
 
   return (
     <div className="pub">
+      {mostrarConfeti && <Confeti active />}
+
       {!sonido && (
         <button className="audio-unlock" onClick={() => { unlockAudio(); setSonido(true) }}>
           🔊 TOCÁ PARA ACTIVAR EL SONIDO
@@ -44,15 +48,26 @@ export default function Publico() {
 
       <Header torneo={torneo} s={s} orden={orden} />
 
-      {torneo.estado === TORNEO.REGISTRO && <VistaRegistro torneo={torneo} equipos={equipos} />}
+      <div className="pub-row-2">
+        <div className="pub-col-main">
+          <BestLapPanel vr={vr} equipos={equipos} />
+          {torneo.estado === TORNEO.REGISTRO && <RegistroQRPanel />}
 
-      {torneo.estado === TORNEO.EN_CURSO && s && (
-        <VistaSesion s={s} orden={orden} gaps={gaps} equipos={equipos} vr={vr} standings={standings} sonido={sonido} />
-      )}
+          {torneo.estado === TORNEO.EN_CURSO && s && (
+            <SesionVisualPanel s={s} orden={orden} equipos={equipos} standings={standings} sonido={sonido} />
+          )}
 
-      {torneo.estado === TORNEO.FINALIZADO && (
-        <VistaCampeon standings={standings} equipos={equipos} />
-      )}
+          {torneo.estado === TORNEO.FINALIZADO && (
+            <CampeonVisualPanel standings={standings} equipos={equipos} />
+          )}
+        </div>
+
+        <div className="pub-col-times">
+          <TimesPanel torneo={torneo} s={s} orden={orden} gaps={gaps} standings={standings} equipos={equipos} vr={vr} />
+        </div>
+      </div>
+
+      <FilaTresPlaceholder />
     </div>
   )
 }
@@ -72,24 +87,80 @@ function Header({ torneo, s, orden }) {
   )
 }
 
-function VistaRegistro({ torneo, equipos }) {
-  const lista = Object.entries(equipos)
+function BestLapPanel({ vr, equipos }) {
   return (
-    <div className="pub-registro">
-      <div className="pub-registro-qr stack" style={{ gap: 16 }}>
-        <div>
-          <div className="pub-registro-cta">ESCANEÁ Y SUMATE</div>
-          <div className="pub-dim">ALTA DE EQUIPOS</div>
-          <QRRegistro url={urlRol('equipo')} size={320} />
+    <div className="pub-panel">
+      <div className="pub-panel-title">BEST LAP</div>
+      {vr && vr.ms != null ? (
+        <div className="vuelta-rapida">
+          <span className="vr-tag">VUELTA RÁPIDA</span>
+          <ColorBadge colorId={equipos[vr.eqId]?.color} nombre={equipos[vr.eqId]?.nombre} />
+          <span className="vr-time">{(vr.ms / 1000).toFixed(2)}s</span>
         </div>
-        <div>
-          <div className="pub-registro-cta">ESCANEÁ Y SUMATE</div>
-          <div className="pub-dim">ALTA DE SENSORES</div>
-          <QRRegistro url={urlRol('sensor')} size={320} />
-        </div>
+      ) : (
+        <div className="pub-dim">SIN VUELTA RÁPIDA AÚN</div>
+      )}
+    </div>
+  )
+}
+
+function RegistroQRPanel() {
+  return (
+    <div className="pub-panel pub-qr-grid">
+      <div>
+        <div className="pub-registro-cta">ESCANEÁ Y SUMATE</div>
+        <div className="pub-dim">ALTA DE EQUIPOS</div>
+        <QRRegistro url={urlRol('equipo')} size={220} />
       </div>
-      <div className="pub-registro-equipos">
-        <div className="puntos-titulo">EQUIPOS ({lista.length})</div>
+      <div>
+        <div className="pub-registro-cta">ESCANEÁ Y SUMATE</div>
+        <div className="pub-dim">ALTA DE SENSORES</div>
+        <QRRegistro url={urlRol('sensor')} size={220} />
+      </div>
+    </div>
+  )
+}
+
+function SesionVisualPanel({ s, orden, equipos, standings, sonido }) {
+  const finalizada = s.estado === SESION.FINALIZADA
+
+  if (finalizada) return <PodioPanel orden={s.resultados || orden} equipos={equipos} standings={standings} />
+
+  return (
+    <div className="pub-panel pub-visual-panel">
+      {s.estado === SESION.BANDERA && <BanderaCuadros />}
+      {(s.estado === SESION.LARGADA || s.estado === SESION.EN_CURSO) && s.estado !== SESION.BANDERA && (
+        <SemaforoSiCorresponde s={s} sonido={sonido} />
+      )}
+    </div>
+  )
+}
+
+function PodioPanel({ orden, equipos, standings }) {
+  return (
+    <div className="pub-panel pub-visual-panel">
+      <Podio orden={orden} equipos={equipos} />
+      {standings?.length > 0 && <TablaPuntos standings={standings} equipos={equipos} />}
+    </div>
+  )
+}
+
+function CampeonVisualPanel({ standings, equipos }) {
+  const orden = standings.map((row, i) => ({ eqId: row.eqId, posicion: i + 1, puntos: row.puntos }))
+  return (
+    <div className="pub-panel pub-visual-panel">
+      <div className="pub-campeon">🏆 CAMPEÓN DEL TORNEO 🏆</div>
+      <Podio orden={orden} equipos={equipos} />
+    </div>
+  )
+}
+
+function TimesPanel({ torneo, s, orden, gaps, standings, equipos, vr }) {
+  if (torneo.estado === TORNEO.REGISTRO) {
+    const lista = Object.entries(equipos)
+    return (
+      <div className="pub-panel">
+        <div className="pub-panel-title">INSCRIPTOS ({lista.length})</div>
         {lista.length === 0 && <div className="pub-dim">TODAVÍA NADIE… ¡ANIMATE!</div>}
         {lista.map(([id, eq]) => (
           <div key={id} className="pub-equipo-row">
@@ -98,46 +169,29 @@ function VistaRegistro({ torneo, equipos }) {
           </div>
         ))}
       </div>
-    </div>
-  )
-}
+    )
+  }
 
-function VistaSesion({ s, orden, gaps, equipos, vr, standings, sonido }) {
-  const enLargada = s.estado === SESION.LARGADA || s.estado === SESION.EN_CURSO
-  const finalizada = s.estado === SESION.FINALIZADA
-
-  if (finalizada) {
+  if (torneo.estado === TORNEO.EN_CURSO && s) {
     return (
-      <div className="pub-final">
-        <Confeti active />
-        <Podio orden={s.resultados || orden} equipos={equipos} />
+      <div className="pub-panel pub-times-live">
+        <div className="pub-panel-title">TIEMPOS EN VIVO</div>
+        <TablaPosiciones orden={orden} gaps={gaps} equipos={equipos} vueltaRapidaEq={vr?.eqId} />
+      </div>
+    )
+  }
+
+  if (torneo.estado === TORNEO.FINALIZADO) {
+    return (
+      <div className="pub-panel pub-times-live">
+        <div className="pub-panel-title">TABLA FINAL</div>
         <TablaPuntos standings={standings} equipos={equipos} />
       </div>
     )
   }
 
-  return (
-    <div className="pub-carrera">
-      <div className="pub-carrera-main">
-        {s.estado === SESION.BANDERA && <BanderaCuadros />}
-        {(s.estado === SESION.LARGADA || (s.estado === SESION.EN_CURSO)) && s.estado !== SESION.BANDERA && (
-          <SemaforoSiCorresponde s={s} sonido={sonido} />
-        )}
-        {vr && vr.ms != null && (
-          <div className="vuelta-rapida">
-            <span className="vr-tag">VUELTA RÁPIDA</span>
-            <ColorBadge colorId={equipos[vr.eqId]?.color} nombre={equipos[vr.eqId]?.nombre} />
-            <span className="vr-time">{(vr.ms / 1000).toFixed(2)}s</span>
-          </div>
-        )}
-      </div>
-      <div className="pub-carrera-tower">
-        <TablaPosiciones orden={orden} gaps={gaps} equipos={equipos} vueltaRapidaEq={vr?.eqId} />
-      </div>
-    </div>
-  )
+  return <div className="pub-panel pub-dim">SIN DATOS</div>
 }
-
 // El semáforo solo tiene sentido en LARGADA y en el instante del verde (EN_CURSO).
 // Una vez la carrera avanza, lo ocultamos para dar lugar a la timing tower.
 function SemaforoSiCorresponde({ s, sonido }) {
@@ -148,15 +202,13 @@ function SemaforoSiCorresponde({ s, sonido }) {
   return null
 }
 
-function VistaCampeon({ standings, equipos }) {
-  // Construye un "podio" a partir del campeonato acumulado.
-  const orden = standings.map((s, i) => ({ eqId: s.eqId, posicion: i + 1, puntos: s.puntos }))
+function FilaTresPlaceholder() {
   return (
-    <div className="pub-final">
-      <Confeti active />
-      <div className="pub-campeon">🏆 CAMPEÓN DEL TORNEO 🏆</div>
-      <Podio orden={orden} equipos={equipos} />
-      <TablaPuntos standings={standings} equipos={equipos} />
+    <div className="pub-row-3">
+      <div className="pub-panel pub-placeholder">
+        <div className="pub-panel-title">FILA 3 · NUEVO COMPONENTE</div>
+        <div className="pub-dim">ESPACIO RESERVADO PARA EL PRÓXIMO MÓDULO</div>
+      </div>
     </div>
   )
 }

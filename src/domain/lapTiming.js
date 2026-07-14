@@ -17,6 +17,7 @@ export function carritoInicial() {
     ultimaPasada: null, // ts de la última pasada válida
     ultimaVuelta: null, // ms de la última vuelta completada
     mejorVuelta: null, // ms de la mejor vuelta
+    lapHistory: [], // vueltas válidas [{ vuelta, tiempoMs, ts }]
     tsFinal: null, // ts al que TERMINÓ o abandonó
   }
 }
@@ -65,6 +66,10 @@ export function registrarPasada(carrito, ts, ctx) {
   const vueltas = carrito.vueltas + 1
   const mejorVuelta =
     carrito.mejorVuelta == null ? delta : Math.min(carrito.mejorVuelta, delta)
+  const lapHistory = [
+    ...((carrito.lapHistory || [])),
+    { vuelta: vueltas, tiempoMs: delta, ts },
+  ]
 
   let next = {
     ...carrito,
@@ -72,6 +77,7 @@ export function registrarPasada(carrito, ts, ctx) {
     ultimaPasada: ts,
     ultimaVuelta: delta,
     mejorVuelta,
+    lapHistory,
   }
 
   let disparaBandera = false
