@@ -128,6 +128,7 @@ function SesionVueltas({ sesion, eqId, activa }) {
   const [abierta, setAbierta] = useState(() => activa)
   const vueltas = vueltasDeEquipo(sesion, eqId)
   const mejorVuelta = sesion?.carritos?.[eqId]?.mejorVuelta
+  const totalVueltas = sesion?.carritos?.[eqId]?.vueltas || 0
   const sinVueltas = vueltas.length === 0
 
   useEffect(() => {
@@ -171,6 +172,13 @@ function SesionVueltas({ sesion, eqId, activa }) {
             })}
           </div>
         )
+      )}
+
+      {!abierta && (
+        <div className="eq-laps-collapsed-summary">
+          <span>{totalVueltas} vueltas</span>
+          <span>best {fmt(mejorVuelta)}</span>
+        </div>
       )}
     </section>
   )
