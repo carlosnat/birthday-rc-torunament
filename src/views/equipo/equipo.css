@@ -52,6 +52,13 @@
   margin-bottom: var(--sp-3);
 }
 .eq-sesion { color: var(--text-dim); margin-bottom: var(--sp-2); }
+.eq-countdown {
+  color: var(--amarillo);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: var(--sp-3);
+}
 
 .eq-pos-box {
   background: var(--bg-elev);

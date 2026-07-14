@@ -7,6 +7,7 @@
 
 import { CARRITO, SESION, TIPO_SESION } from './constants.js'
 import { sesionAceptaPasadas, carritoActivo } from './stateMachine.js'
+import { sesionExpiradaEn } from './sessionTimer.js'
 
 /** Estado inicial de un carrito en la grilla. */
 export function carritoInicial() {
@@ -24,6 +25,7 @@ export function carritoInicial() {
 
 export const MOTIVO = Object.freeze({
   SESION_NO_ACEPTA: 'SESION_NO_ACEPTA',
+  SESION_EXPIRADA: 'SESION_EXPIRADA',
   CARRITO_INACTIVO: 'CARRITO_INACTIVO',
   REBOTE: 'REBOTE',
 })
@@ -40,6 +42,15 @@ export function registrarPasada(carrito, ts, ctx) {
 
   if (!sesionAceptaPasadas(sesionEstado)) {
     return { aceptada: false, motivo: MOTIVO.SESION_NO_ACEPTA }
+  }
+  if (sesionExpiradaEn({
+    tipo: tipoSesion,
+    estado: sesionEstado,
+    duracionMs: ctx.duracionMs,
+    msConsumidos: ctx.msConsumidos,
+    tsInicioCrono: ctx.tsInicioCrono,
+  }, ts)) {
+    return { aceptada: false, motivo: MOTIVO.SESION_EXPIRADA }
   }
   if (!carritoActivo(carrito.estado)) {
     return { aceptada: false, motivo: MOTIVO.CARRITO_INACTIVO }

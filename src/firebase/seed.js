@@ -4,6 +4,9 @@
 
 import { PUNTUACION_F1, TIPO_SESION } from '../domain/constants.js'
 
+const PRACTICA_DURACION_MS = 5 * 60 * 1000
+const QUALY_DURACION_MS = 3 * 60 * 1000
+
 // Config del torneo: circuitos con sus sesiones (tipo + vueltas objetivo).
 // Por ahora es una plantilla fija; el editor de config será un hito posterior.
 export const DEFAULT_CONFIG = {
@@ -16,8 +19,8 @@ export const DEFAULT_CONFIG = {
       nombre: 'CIRCUITO 1',
       tiempoMinimoVuelta: 3000,
       sesiones: [
-        { id: 'c1-practica', tipo: TIPO_SESION.PRACTICA, vueltas: 0 },
-        { id: 'c1-qualy', tipo: TIPO_SESION.QUALY, vueltas: 2 },
+        { id: 'c1-practica', tipo: TIPO_SESION.PRACTICA, vueltas: 0, duracionMs: PRACTICA_DURACION_MS },
+        { id: 'c1-qualy', tipo: TIPO_SESION.QUALY, vueltas: 0, duracionMs: QUALY_DURACION_MS },
         { id: 'c1-carrera', tipo: TIPO_SESION.CARRERA, vueltas: 3 },
       ],
     },

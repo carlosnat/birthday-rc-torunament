@@ -13,6 +13,7 @@ import { puedeTorneo, puedeSesion, puedeCircuito } from '../domain/stateMachine.
 import { registrarPasada, carritoInicial } from '../domain/lapTiming.js'
 import { clasificar } from '../domain/classification.js'
 import { siguientePaso } from '../domain/progression.js'
+import { esSesionTemporizada, snapshotCronometro } from '../domain/sessionTimer.js'
 
 const T = TORNEO_ID
 
@@ -120,21 +121,35 @@ export async function luzVerde(torneo) {
   const s = sesionActivaDe(torneo)
   if (!s) return rechazo('SIN_SESION_ACTIVA')
   if (!puedeSesion(s.estado, SESION.EN_CURSO, s.tipo)) return rechazo('SESION_TRANSICION', { desde: s.estado })
-  await writePath(P.sesionEstado(T, s.id), SESION.EN_CURSO)
+  const next = { estado: SESION.EN_CURSO }
+  if (esSesionTemporizada(s)) {
+    next.tsInicioCrono = Date.now()
+  }
+  await updatePath(P.sesion(T, s.id), next)
   await logEvento(T, 'LUZ_VERDE', { sesion: s.id })
 }
 
 export async function pausar(torneo) {
   const s = sesionActivaDe(torneo)
   if (!s || !puedeSesion(s.estado, SESION.PAUSADA, s.tipo)) return rechazo('SESION_TRANSICION', { desde: s?.estado })
-  await writePath(P.sesionEstado(T, s.id), SESION.PAUSADA)
+  const next = { estado: SESION.PAUSADA }
+  const clock = snapshotCronometro(s)
+  if (clock) {
+    next.msConsumidos = clock.msConsumidos
+    next.tsInicioCrono = null
+  }
+  await updatePath(P.sesion(T, s.id), next)
   await logEvento(T, 'PAUSA', { sesion: s.id })
 }
 
 export async function reanudar(torneo) {
   const s = sesionActivaDe(torneo)
   if (!s || !puedeSesion(s.estado, SESION.EN_CURSO, s.tipo)) return rechazo('SESION_TRANSICION', { desde: s?.estado })
-  await writePath(P.sesionEstado(T, s.id), SESION.EN_CURSO)
+  const next = { estado: SESION.EN_CURSO }
+  if (esSesionTemporizada(s)) {
+    next.tsInicioCrono = Date.now()
+  }
+  await updatePath(P.sesion(T, s.id), next)
   await logEvento(T, 'REANUDA', { sesion: s.id })
 }
 
@@ -179,6 +194,9 @@ export async function pasada(torneo, eqId, ts = Date.now()) {
     sesionEstado: s.estado,
     tipoSesion: s.tipo,
     vueltasObjetivo: s.vueltasObjetivo,
+    duracionMs: s.duracionMs,
+    msConsumidos: s.msConsumidos,
+    tsInicioCrono: s.tsInicioCrono,
   })
 
   if (!res.aceptada) {
@@ -238,7 +256,13 @@ export async function finalizarSesion(torneo) {
   }
 
   const resultados = clasificar(s.carritos, s.tipo, torneo.config.puntuacion)
-  await updatePath(P.sesion(T, s.id), { estado: SESION.FINALIZADA, resultados })
+  const next = { estado: SESION.FINALIZADA, resultados }
+  const clock = snapshotCronometro(s)
+  if (clock) {
+    next.msConsumidos = clock.msConsumidos
+    next.tsInicioCrono = null
+  }
+  await updatePath(P.sesion(T, s.id), next)
   await logEvento(T, 'SESION_FINALIZADA', { sesion: s.id, tipo: s.tipo, resultados })
 
   await avanzar(torneo)

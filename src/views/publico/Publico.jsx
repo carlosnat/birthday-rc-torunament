@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 import { useTorneo } from '../../context/TournamentContext.jsx'
+import { useNow } from '../../hooks/useNow.js'
 import QRRegistro from '../../components/QRRegistro.jsx'
 import ColorBadge from '../../components/ColorBadge.jsx'
 import SemaforoF1 from '../../components/SemaforoF1.jsx'
@@ -16,6 +17,7 @@ import TablaPuntos from '../../components/TablaPuntos.jsx'
 import { clasificar, vueltaRapida } from '../../domain/classification.js'
 import { puntosAcumulados, calcularGaps } from '../../domain/standings.js'
 import { TORNEO, SESION } from '../../domain/constants.js'
+import { esSesionTemporizada, formatCountdown, tiempoRestanteEn } from '../../domain/sessionTimer.js'
 import { urlRol } from '../../currentTorneo.js'
 import { unlockAudio } from '../../utils/audio.js'
 import './publico.css'
@@ -23,6 +25,7 @@ import './publico.css'
 export default function Publico() {
   const { torneo, loading } = useTorneo()
   const [sonido, setSonido] = useState(false)
+  const now = useNow(1000)
 
   if (loading) return <div className="pub pub-center">CARGANDO…</div>
   if (!torneo) return <div className="pub pub-center">TORNEO NO ENCONTRADO</div>
@@ -46,7 +49,7 @@ export default function Publico() {
         </button>
       )}
 
-      <Header torneo={torneo} s={s} orden={orden} />
+      <Header torneo={torneo} s={s} orden={orden} now={now} />
 
       <div className="pub-row-2">
         <div className="pub-col-main">
@@ -72,8 +75,11 @@ export default function Publico() {
   )
 }
 
-function Header({ torneo, s, orden }) {
+function Header({ torneo, s, orden, now }) {
   const lider = orden[0]
+  const temporizada = esSesionTemporizada(s)
+  const restanteMs = temporizada ? tiempoRestanteEn(s, now) : null
+
   return (
     <div className="pub-header">
       <div className="pub-title">{torneo.config?.nombre}</div>
@@ -81,6 +87,7 @@ function Header({ torneo, s, orden }) {
         {torneo.circuitoActivo && <span>{torneo.circuitoActivo}</span>}
         {s && <span>· {s.tipo}</span>}
         {s && s.vueltasObjetivo > 0 && lider && <span>· VUELTA {Math.min(lider.vueltas, s.vueltasObjetivo)}/{s.vueltasObjetivo}</span>}
+        {temporizada && <span>· TIEMPO RESTANTE {formatCountdown(restanteMs)}</span>}
         {s && <span className="pub-estado">{s.estado}</span>}
       </div>
     </div>

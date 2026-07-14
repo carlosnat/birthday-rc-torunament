@@ -7,16 +7,44 @@ import { TIPO_SESION } from '../../domain/constants.js'
 import { nuevoTorneoId } from '../../currentTorneo.js'
 
 const DEFAULT_RACE_LAPS = 3
-const DEFAULT_QUALY_LAPS = 2
 const DEFAULT_TIME_MIN = 3000
+const DEFAULT_PRACTICA_DURATION_MS = 5 * 60 * 1000
+const DEFAULT_QUALY_DURATION_MS = 3 * 60 * 1000
+
+function descomponerDuracion(ms, fallbackMs) {
+  const totalSegundos = Math.max(0, Math.floor((Number(ms) || fallbackMs) / 1000))
+  return {
+    min: Math.floor(totalSegundos / 60),
+    sec: totalSegundos % 60,
+  }
+}
+
+function normalizarSegmentoTiempo(value, max) {
+  const numero = Math.floor(Number(value) || 0)
+  return Math.max(0, Math.min(max, numero))
+}
+
+function duracionDesdeCampos(min, sec, fallbackMs) {
+  const minutos = normalizarSegmentoTiempo(min, 99)
+  const segundos = normalizarSegmentoTiempo(sec, 59)
+  const totalMs = (minutos * 60 + segundos) * 1000
+  return totalMs > 0 ? totalMs : fallbackMs
+}
 
 function nuevoCircuito(index) {
+  const practica = descomponerDuracion(DEFAULT_PRACTICA_DURATION_MS, DEFAULT_PRACTICA_DURATION_MS)
+  const qualy = descomponerDuracion(DEFAULT_QUALY_DURATION_MS, DEFAULT_QUALY_DURATION_MS)
+
   return {
     id: nuevoTorneoId(),
     nombre: `CIRCUITO ${index + 1}`,
     vueltasCarrera: DEFAULT_RACE_LAPS,
     practica: true,
     qualy: true,
+    practicaDuracionMin: practica.min,
+    practicaDuracionSec: practica.sec,
+    qualyDuracionMin: qualy.min,
+    qualyDuracionSec: qualy.sec,
     tiempoMinimoVuelta: DEFAULT_TIME_MIN,
   }
 }
@@ -30,11 +58,29 @@ function construirConfig(nombreTorneo, circuitos) {
       const sesiones = []
 
       if (circuito.practica) {
-        sesiones.push({ id: `${circuitoId}-practica`, tipo: TIPO_SESION.PRACTICA, vueltas: 0 })
+        sesiones.push({
+          id: `${circuitoId}-practica`,
+          tipo: TIPO_SESION.PRACTICA,
+          vueltas: 0,
+          duracionMs: duracionDesdeCampos(
+            circuito.practicaDuracionMin,
+            circuito.practicaDuracionSec,
+            DEFAULT_PRACTICA_DURATION_MS,
+          ),
+        })
       }
 
       if (circuito.qualy) {
-        sesiones.push({ id: `${circuitoId}-qualy`, tipo: TIPO_SESION.QUALY, vueltas: DEFAULT_QUALY_LAPS })
+        sesiones.push({
+          id: `${circuitoId}-qualy`,
+          tipo: TIPO_SESION.QUALY,
+          vueltas: 0,
+          duracionMs: duracionDesdeCampos(
+            circuito.qualyDuracionMin,
+            circuito.qualyDuracionSec,
+            DEFAULT_QUALY_DURATION_MS,
+          ),
+        })
       }
 
       sesiones.push({
@@ -69,6 +115,34 @@ export default function CreateTournamentForm({ onCreate, onCancel, creating }) {
     setCircuitos((prev) => prev.map((circuito, circuitoIndex) => (
       circuitoIndex === index ? { ...circuito, [key]: value } : circuito
     )))
+  }
+
+  function renderDuracion(index, prefix, label, circuito) {
+    return (
+      <div className="form-section">
+        <label className="landing-label">{label}</label>
+        <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+          <input
+            className="input input--sm"
+            type="number"
+            min="0"
+            max="99"
+            value={circuito[`${prefix}DuracionMin`]}
+            onChange={(e) => actualizarCircuito(index, `${prefix}DuracionMin`, Number(e.target.value))}
+          />
+          <span className="text-dim">MIN</span>
+          <input
+            className="input input--sm"
+            type="number"
+            min="0"
+            max="59"
+            value={circuito[`${prefix}DuracionSec`]}
+            onChange={(e) => actualizarCircuito(index, `${prefix}DuracionSec`, Number(e.target.value))}
+          />
+          <span className="text-dim">SEG</span>
+        </div>
+      </div>
+    )
   }
 
   function submit(e) {
@@ -158,6 +232,9 @@ export default function CreateTournamentForm({ onCreate, onCancel, creating }) {
                 <span>QUALY</span>
               </label>
             </div>
+
+            {circuito.practica && renderDuracion(index, 'practica', 'TIEMPO MÁXIMO DE PRÁCTICA', circuito)}
+            {circuito.qualy && renderDuracion(index, 'qualy', 'TIEMPO MÁXIMO DE QUALY', circuito)}
           </div>
         ))}
       </div>

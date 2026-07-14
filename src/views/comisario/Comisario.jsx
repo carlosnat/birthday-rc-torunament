@@ -12,6 +12,7 @@ import SensorHealth from '../../components/SensorHealth.jsx'
 import * as A from '../../firebase/raceActions.js'
 import { moverSensor } from '../../firebase/registroActions.js'
 import { TORNEO, SESION, CARRITO } from '../../domain/constants.js'
+import { esSesionTemporizada, formatCountdown, tiempoRestanteEn } from '../../domain/sessionTimer.js'
 import { TORNEO_ID, irA, urlRol } from '../../currentTorneo.js'
 import './comisario.css'
 
@@ -143,17 +144,47 @@ function RegistroPanel({ torneo }) {
 
 function SesionControles({ torneo }) {
   const s = torneo.sesionActiva ? torneo.sesiones?.[torneo.sesionActiva] : null
+  const now = useNow(250)
+  const [autoFinalizando, setAutoFinalizando] = useState(false)
+  const est = s?.estado ?? null
+  const temporizada = esSesionTemporizada(s)
+  const restanteMs = temporizada ? tiempoRestanteEn(s, now) : null
+
+  useEffect(() => {
+    setAutoFinalizando(false)
+  }, [torneo.sesionActiva, s?.estado])
+
+  useEffect(() => {
+    if (!temporizada || est !== SESION.EN_CURSO || restanteMs == null || restanteMs > 0 || autoFinalizando) return
+
+    let cancelado = false
+    setAutoFinalizando(true)
+    A.finalizarSesion(torneo).finally(() => {
+      if (!cancelado) setAutoFinalizando(false)
+    })
+
+    return () => {
+      cancelado = true
+    }
+  }, [autoFinalizando, est, restanteMs, temporizada, torneo])
+
   if (!s) return null
-  const est = s.estado
+
   return (
     <div className="panel">
       <h2>SESIÓN · {s.tipo}</h2>
+      {temporizada && (
+        <div className="row" style={{ marginBottom: 8, justifyContent: 'space-between' }}>
+          <span className="chip-estado">CRONO {est === SESION.PAUSADA ? 'PAUSADO' : 'ACTIVO'}</span>
+          <span className="text-dim">TIEMPO RESTANTE: {formatCountdown(restanteMs ?? 0)}</span>
+        </div>
+      )}
       <div className="row">
         <button className="btn btn--primary" disabled={est !== SESION.ESPERANDO} onClick={() => A.largar(torneo)}>LARGAR</button>
         <button className="btn btn--verde" disabled={est !== SESION.LARGADA} onClick={() => A.luzVerde(torneo)}>🟢 LUZ VERDE</button>
         <button className="btn" disabled={est !== SESION.EN_CURSO} onClick={() => A.pausar(torneo)}>PAUSAR</button>
         <button className="btn" disabled={est !== SESION.PAUSADA} onClick={() => A.reanudar(torneo)}>REANUDAR</button>
-        <button className="btn btn--primary" disabled={est !== SESION.EN_CURSO && est !== SESION.PAUSADA && est !== SESION.BANDERA} onClick={() => A.finalizarSesion(torneo)}>FINALIZAR</button>
+        <button className="btn btn--primary" disabled={(est !== SESION.EN_CURSO && est !== SESION.PAUSADA && est !== SESION.BANDERA) || autoFinalizando} onClick={() => A.finalizarSesion(torneo)}>FINALIZAR</button>
       </div>
       <div className="row" style={{ marginTop: 8 }}>
         <span className="text-dim">TIEMPO MÍN. VUELTA: {s.tiempoMinimoVuelta} ms</span>

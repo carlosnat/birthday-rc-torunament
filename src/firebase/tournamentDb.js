@@ -50,6 +50,9 @@ function sesionInicial(config, def) {
     vueltasObjetivo: def.vueltas,
     circuitoId: def.circuitoId,
     tiempoMinimoVuelta: def.tiempoMinimoVuelta,
+    duracionMs: def.duracionMs ?? null,
+    msConsumidos: 0,
+    tsInicioCrono: null,
     pilotos: {},
     resultados: [],
   }

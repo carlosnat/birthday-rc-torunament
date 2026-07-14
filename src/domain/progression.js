@@ -49,7 +49,14 @@ export function siguientePaso(config, circuitoId, sesionId) {
 export function defSesion(config, sesionId) {
   for (const c of config?.circuitos || []) {
     for (const s of c.sesiones || []) {
-      if (s.id === sesionId) return { ...s, circuitoId: c.id, tiempoMinimoVuelta: c.tiempoMinimoVuelta }
+      if (s.id === sesionId) {
+        return {
+          ...s,
+          circuitoId: c.id,
+          tiempoMinimoVuelta: c.tiempoMinimoVuelta,
+          duracionMs: s.duracionMs ?? null,
+        }
+      }
     }
   }
   return null

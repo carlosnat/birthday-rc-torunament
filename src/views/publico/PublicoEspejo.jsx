@@ -3,20 +3,25 @@
 // Sirve para validar el pub/sub: abrir en otra pestaña y ver los cambios del harness.
 
 import { useTorneo } from '../../context/TournamentContext.jsx'
+import { useNow } from '../../hooks/useNow.js'
 import ColorBadge from '../../components/ColorBadge.jsx'
 import QRRegistro from '../../components/QRRegistro.jsx'
 import { clasificar } from '../../domain/classification.js'
 import { CARRITO, TORNEO } from '../../domain/constants.js'
+import { esSesionTemporizada, formatCountdown, tiempoRestanteEn } from '../../domain/sessionTimer.js'
 import { urlRol } from '../../currentTorneo.js'
 
 export default function PublicoEspejo() {
   const { torneo, loading } = useTorneo()
+  const now = useNow(1000)
   if (loading) return <div className="app">CARGANDO…</div>
   if (!torneo) return <div className="app">SIN TORNEO</div>
 
   const s = torneo.sesionActiva ? torneo.sesiones?.[torneo.sesionActiva] : null
   const orden = s ? clasificar(s.carritos, s.tipo, torneo.config.puntuacion) : []
   const equipos = Object.entries(torneo.equipos || {})
+  const temporizada = esSesionTemporizada(s)
+  const restanteMs = temporizada ? tiempoRestanteEn(s, now) : null
 
   return (
     <div className="app stack">
@@ -56,6 +61,7 @@ export default function PublicoEspejo() {
       {s && (
         <div className="panel">
           <h2>{torneo.circuitoActivo} · {s.tipo} · {s.estado}</h2>
+          {temporizada && <div className="text-dim" style={{ marginBottom: 8 }}>TIEMPO RESTANTE: {formatCountdown(restanteMs)}</div>}
           <table className="tabla">
             <thead><tr><th>POS</th><th>EQUIPO</th><th>VUELTAS</th><th>ÚLT.</th><th>MEJOR</th></tr></thead>
             <tbody>

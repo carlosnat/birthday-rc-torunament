@@ -6,11 +6,13 @@
 
 import { useEffect, useState } from 'react'
 import { useTorneo } from '../../context/TournamentContext.jsx'
+import { useNow } from '../../hooks/useNow.js'
 import ColorBadge from '../../components/ColorBadge.jsx'
 import { clasificar } from '../../domain/classification.js'
 import { calcularGaps, puntosAcumulados } from '../../domain/standings.js'
 import { getColor } from '../../domain/colors.js'
 import { SESION, CARRITO } from '../../domain/constants.js'
+import { esSesionTemporizada, formatCountdown, tiempoRestanteEn } from '../../domain/sessionTimer.js'
 import { TORNEO_ID } from '../../currentTorneo.js'
 import * as A from '../../firebase/raceActions.js'
 import RegistroEquipo from './RegistroEquipo.jsx'
@@ -38,6 +40,7 @@ function vueltasDeEquipo(sesion, eqId) {
 export default function Equipo() {
   const { torneo, loading } = useTorneo()
   const [eqId, setEqId] = useState(() => (LS_KEY ? localStorage.getItem(LS_KEY) : null))
+  const now = useNow(1000)
 
   if (loading) return <div className="app eq">CARGANDO…</div>
   if (!torneo) return <div className="app eq">TORNEO NO ENCONTRADO</div>
@@ -66,6 +69,8 @@ export default function Equipo() {
   const standings = puntosAcumulados(torneo)
   const misPuntos = standings.find((x) => x.eqId === eqId)?.puntos ?? 0
   const sesionesCircuito = s ? sesionesDelCircuito(torneo, s.circuitoId) : []
+  const temporizada = esSesionTemporizada(s)
+  const restanteMs = temporizada ? tiempoRestanteEn(s, now) : null
 
   const enCarrera = carrito?.estado === CARRITO.EN_CARRERA
   const vueltaActual = enCarrera ? (carrito.vueltas || 0) + 1 : carrito?.vueltas || 0
@@ -80,6 +85,7 @@ export default function Equipo() {
       {s ? (
         <>
           <div className="eq-sesion">{torneo.circuitoActivo} · {s.tipo} · <b>{s.estado}</b></div>
+          {temporizada && <div className="eq-countdown">TIEMPO RESTANTE · {formatCountdown(restanteMs)}</div>}
 
           <div className="eq-pos-box">
             <div className="eq-pos-label">POSICIÓN</div>
