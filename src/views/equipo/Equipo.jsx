@@ -11,6 +11,7 @@ import ColorBadge from '../../components/ColorBadge.jsx'
 import { clasificar } from '../../domain/classification.js'
 import { calcularGaps, puntosAcumulados } from '../../domain/standings.js'
 import { getColor } from '../../domain/colors.js'
+import { avatarDeEquipo, participantesNormalizados } from '../../domain/participants.js'
 import { SESION, CARRITO } from '../../domain/constants.js'
 import { esSesionTemporizada, formatCountdown, tiempoRestanteEn } from '../../domain/sessionTimer.js'
 import { TORNEO_ID } from '../../currentTorneo.js'
@@ -66,6 +67,7 @@ export default function Equipo() {
   const gaps = calcularGaps(orden)
   const miPos = orden.find((r) => r.eqId === eqId)
   const carrito = s?.carritos?.[eqId]
+  const avatarId = avatarDeEquipo(miEquipo, s?.pilotos?.[eqId])
   const standings = puntosAcumulados(torneo)
   const misPuntos = standings.find((x) => x.eqId === eqId)?.puntos ?? 0
   const sesionesCircuito = s ? sesionesDelCircuito(torneo, s.circuitoId) : []
@@ -78,7 +80,7 @@ export default function Equipo() {
   return (
     <div className="app eq" style={{ '--eq-color': color?.hex }}>
       <div className="eq-top">
-        <ColorBadge colorId={miEquipo.color} nombre={miEquipo.nombre} />
+        <ColorBadge colorId={miEquipo.color} nombre={miEquipo.nombre} avatarId={avatarId} />
         <button className="btn btn--ghost" onClick={() => { if (LS_KEY) localStorage.removeItem(LS_KEY); setEqId(null) }}>CAMBIAR</button>
       </div>
 
@@ -202,19 +204,20 @@ function Metric({ label, value, morado }) {
 function Piloto({ torneo, eqId, equipo, sesion }) {
   const piloto = sesion.pilotos?.[eqId]
   const puedeMarcar = sesion.estado === SESION.ESPERANDO || sesion.estado === SESION.LARGADA
+  const participantes = participantesNormalizados(equipo)
   return (
     <div className="eq-piloto">
       <div className="eq-metric-label">PILOTO DE ESTA SESIÓN</div>
       <div className={`eq-piloto-actual ${piloto ? '' : 'text-rojo'}`}>{piloto || 'SIN ASIGNAR'}</div>
       {puedeMarcar && (
         <div className="eq-piloto-btns">
-          {(equipo.participantes || []).map((p) => (
+          {participantes.map((p) => (
             <button
-              key={p}
-              className={`btn ${piloto === p ? 'btn--verde' : ''}`}
-              onClick={() => A.asignarPiloto(torneo, eqId, p)}
+              key={p.id}
+              className={`btn ${piloto === p.nombre ? 'btn--verde' : ''}`}
+              onClick={() => A.asignarPiloto(torneo, eqId, p.nombre)}
             >
-              {p}
+              {p.nombre}
             </button>
           ))}
         </div>

@@ -17,6 +17,7 @@ import TablaPuntos from '../../components/TablaPuntos.jsx'
 import { clasificar, vueltaRapida } from '../../domain/classification.js'
 import { puntosAcumulados, calcularGaps } from '../../domain/standings.js'
 import { TORNEO, SESION } from '../../domain/constants.js'
+import { avatarDeEquipo } from '../../domain/participants.js'
 import { esSesionTemporizada, formatCountdown, tiempoRestanteEn } from '../../domain/sessionTimer.js'
 import { urlRol } from '../../currentTorneo.js'
 import { unlockAudio } from '../../utils/audio.js'
@@ -53,7 +54,7 @@ export default function Publico() {
 
       <div className="pub-row-2">
         <div className="pub-col-main">
-          <BestLapPanel vr={vr} equipos={equipos} />
+          <BestLapPanel vr={vr} equipos={equipos} pilotosSesion={s?.pilotos} />
           {torneo.estado === TORNEO.REGISTRO && <RegistroQRPanel />}
 
           {torneo.estado === TORNEO.EN_CURSO && s && (
@@ -94,14 +95,15 @@ function Header({ torneo, s, orden, now }) {
   )
 }
 
-function BestLapPanel({ vr, equipos }) {
+function BestLapPanel({ vr, equipos, pilotosSesion }) {
+  const avatarId = vr ? avatarDeEquipo(equipos[vr.eqId], pilotosSesion?.[vr.eqId]) : null
   return (
     <div className="pub-panel">
       <div className="pub-panel-title">BEST LAP</div>
       {vr && vr.ms != null ? (
         <div className="vuelta-rapida">
           <span className="vr-tag">VUELTA RÁPIDA</span>
-          <ColorBadge colorId={equipos[vr.eqId]?.color} nombre={equipos[vr.eqId]?.nombre} />
+          <ColorBadge colorId={equipos[vr.eqId]?.color} nombre={equipos[vr.eqId]?.nombre} avatarId={avatarId} />
           <span className="vr-time">{(vr.ms / 1000).toFixed(2)}s</span>
         </div>
       ) : (
@@ -131,7 +133,7 @@ function RegistroQRPanel() {
 function SesionVisualPanel({ s, orden, equipos, standings, sonido }) {
   const finalizada = s.estado === SESION.FINALIZADA
 
-  if (finalizada) return <PodioPanel orden={s.resultados || orden} equipos={equipos} standings={standings} />
+  if (finalizada) return <PodioPanel orden={s.resultados || orden} equipos={equipos} standings={standings} pilotosSesion={s.pilotos} />
 
   return (
     <div className="pub-panel pub-visual-panel">
@@ -143,11 +145,11 @@ function SesionVisualPanel({ s, orden, equipos, standings, sonido }) {
   )
 }
 
-function PodioPanel({ orden, equipos, standings }) {
+function PodioPanel({ orden, equipos, standings, pilotosSesion }) {
   return (
     <div className="pub-panel pub-visual-panel">
-      <Podio orden={orden} equipos={equipos} />
-      {standings?.length > 0 && <TablaPuntos standings={standings} equipos={equipos} />}
+      <Podio orden={orden} equipos={equipos} pilotosSesion={pilotosSesion} />
+      {standings?.length > 0 && <TablaPuntos standings={standings} equipos={equipos} pilotosSesion={pilotosSesion} />}
     </div>
   )
 }
@@ -171,7 +173,7 @@ function TimesPanel({ torneo, s, orden, gaps, standings, equipos, vr }) {
         {lista.length === 0 && <div className="pub-dim">TODAVÍA NADIE… ¡ANIMATE!</div>}
         {lista.map(([id, eq]) => (
           <div key={id} className="pub-equipo-row">
-            <ColorBadge colorId={eq.color} nombre={eq.nombre} />
+            <ColorBadge colorId={eq.color} nombre={eq.nombre} avatarId={avatarDeEquipo(eq)} />
             <span className="pub-dim">{(eq.participantes || []).length} INT.</span>
           </div>
         ))}
@@ -183,7 +185,7 @@ function TimesPanel({ torneo, s, orden, gaps, standings, equipos, vr }) {
     return (
       <div className="pub-panel pub-times-live">
         <div className="pub-panel-title">TIEMPOS EN VIVO</div>
-        <TablaPosiciones orden={orden} gaps={gaps} equipos={equipos} vueltaRapidaEq={vr?.eqId} />
+        <TablaPosiciones orden={orden} gaps={gaps} equipos={equipos} vueltaRapidaEq={vr?.eqId} pilotosSesion={s.pilotos} />
       </div>
     )
   }
@@ -192,7 +194,7 @@ function TimesPanel({ torneo, s, orden, gaps, standings, equipos, vr }) {
     return (
       <div className="pub-panel pub-times-live">
         <div className="pub-panel-title">TABLA FINAL</div>
-        <TablaPuntos standings={standings} equipos={equipos} />
+        <TablaPuntos standings={standings} equipos={equipos} pilotosSesion={s?.pilotos} />
       </div>
     )
   }

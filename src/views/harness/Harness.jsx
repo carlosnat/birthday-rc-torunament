@@ -10,6 +10,7 @@ import QRRegistro from '../../components/QRRegistro.jsx'
 import { seedTorneoDemo, crearTorneo, resetTorneo } from '../../firebase/tournamentDb.js'
 import * as A from '../../firebase/raceActions.js'
 import { TORNEO, SESION, CARRITO } from '../../domain/constants.js'
+import { avatarDeEquipo, participantesNormalizados } from '../../domain/participants.js'
 import { urlRol } from '../../currentTorneo.js'
 import './harness.css'
 
@@ -161,13 +162,15 @@ function Pilotos({ torneo }) {
       <div className="stack" style={{ gap: 6 }}>
         {Object.entries(torneo.equipos || {}).map(([eqId, eq]) => {
           const piloto = s.pilotos?.[eqId]
+          const participantes = participantesNormalizados(eq)
+          const avatarId = avatarDeEquipo(eq, piloto)
           return (
             <div key={eqId} className="row" style={{ justifyContent: 'space-between' }}>
-              <ColorBadge colorId={eq.color} nombre={eq.nombre} />
+              <ColorBadge colorId={eq.color} nombre={eq.nombre} avatarId={avatarId} />
               <div className="row">
                 <span className={piloto ? '' : 'text-rojo'}>{piloto || 'SIN PILOTO'}</span>
-                {(eq.participantes || []).map((p) => (
-                  <button key={p} className="btn btn--ghost" onClick={() => A.asignarPiloto(torneo, eqId, p)}>{p}</button>
+                {participantes.map((p) => (
+                  <button key={p.id} className="btn btn--ghost" onClick={() => A.asignarPiloto(torneo, eqId, p.nombre)}>{p.nombre}</button>
                 ))}
               </div>
             </div>

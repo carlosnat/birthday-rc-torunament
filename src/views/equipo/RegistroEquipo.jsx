@@ -3,27 +3,33 @@
 
 import { useEffect, useState } from 'react'
 import ColorBadge from '../../components/ColorBadge.jsx'
+import AvatarSprite from '../../components/AvatarSprite.jsx'
 import { coloresDisponibles } from '../../domain/colors.js'
+import { avatarsDisponibles, DEFAULT_AVATAR_ID } from '../../domain/avatars.js'
+import { avatarDeEquipo } from '../../domain/participants.js'
 import * as R from '../../firebase/registroActions.js'
 import './equipo.css'
 
 export default function RegistroEquipo({ torneo, onListo }) {
   const disponibles = coloresDisponibles(torneo.equipos)
+  const listaAvatares = avatarsDisponibles()
   const equipos = Object.entries(torneo.equipos || {})
   const [modo, setModo] = useState('crear')
   const [nombreEquipo, setNombreEquipo] = useState('')
   const [colorId, setColorId] = useState(disponibles[0]?.id || '')
   const [miNombre, setMiNombre] = useState('')
+  const [avatarId, setAvatarId] = useState(DEFAULT_AVATAR_ID)
   const [eqId, setEqId] = useState(equipos[0]?.[0] || '')
   const [msg, setMsg] = useState(null)
 
   useEffect(() => {
     if (!colorId && disponibles[0]?.id) setColorId(disponibles[0].id)
+    if (!avatarId && listaAvatares[0]?.id) setAvatarId(listaAvatares[0].id)
     if (!eqId && equipos[0]?.[0]) setEqId(equipos[0][0])
-  }, [disponibles, equipos, colorId, eqId])
+  }, [disponibles, equipos, colorId, avatarId, eqId, listaAvatares])
 
   async function crear() {
-    const res = await R.crearEquipo(torneo, { nombre: nombreEquipo, colorId, participante: miNombre })
+    const res = await R.crearEquipo(torneo, { nombre: nombreEquipo, colorId, participante: miNombre, avatarId })
     setMsg(res.ok ? { ok: true, txt: '¡EQUIPO CREADO! YA PODÉS ENTRAR.' } : { ok: false, txt: res.motivo })
     if (res.ok) {
       setNombreEquipo('')
@@ -33,7 +39,7 @@ export default function RegistroEquipo({ torneo, onListo }) {
   }
 
   async function unirse() {
-    const res = await R.unirseEquipo(torneo, eqId, miNombre)
+    const res = await R.unirseEquipo(torneo, eqId, miNombre, avatarId)
     setMsg(res.ok ? { ok: true, txt: '¡TE UNISTE AL EQUIPO!' } : { ok: false, txt: res.motivo })
     if (res.ok) {
       setMiNombre('')
@@ -68,6 +74,7 @@ export default function RegistroEquipo({ torneo, onListo }) {
                   />
                 ))}
               </div>
+              <AvatarSelector listaAvatares={listaAvatares} avatarId={avatarId} setAvatarId={setAvatarId} />
               <input className="input" placeholder="TU NOMBRE" value={miNombre} onChange={(e) => setMiNombre(e.target.value)} />
               <button className="btn btn--primary" disabled={!nombreEquipo || !miNombre || !colorId} onClick={crear}>CREAR</button>
             </>
@@ -79,17 +86,43 @@ export default function RegistroEquipo({ torneo, onListo }) {
           <div className="stack" style={{ gap: 6 }}>
             {equipos.map(([id, eq]) => (
               <button key={id} className={`equipo-pick ${eqId === id ? 'sel' : ''}`} onClick={() => setEqId(id)}>
-                <ColorBadge colorId={eq.color} nombre={eq.nombre} />
+                <ColorBadge colorId={eq.color} nombre={eq.nombre} avatarId={avatarDeEquipo(eq)} />
                 <span className="text-dim">{(eq.participantes || []).length} INT.</span>
               </button>
             ))}
           </div>
+          <AvatarSelector listaAvatares={listaAvatares} avatarId={avatarId} setAvatarId={setAvatarId} />
           <input className="input" placeholder="TU NOMBRE" value={miNombre} onChange={(e) => setMiNombre(e.target.value)} />
           <button className="btn btn--primary" disabled={!eqId || !miNombre} onClick={unirse}>UNIRME</button>
         </div>
       )}
 
       {msg && <div className={`panel ${msg.ok ? 'ok' : 'text-rojo'}`}>{msg.txt}</div>}
+    </div>
+  )
+}
+
+function AvatarSelector({ listaAvatares, avatarId, setAvatarId }) {
+  if (!listaAvatares.length) {
+    return <div className="text-rojo">NO HAY AVATARES DISPONIBLES EN assets/images.</div>
+  }
+
+  return (
+    <div className="stack" style={{ gap: 8 }}>
+      <div className="text-dim">ELEGÍ TU AVATAR</div>
+      <div className="avatar-grid">
+        {listaAvatares.map((avatar) => (
+          <button
+            key={avatar.id}
+            type="button"
+            className={`avatar-option ${avatarId === avatar.id ? 'selected' : ''}`}
+            onClick={() => setAvatarId(avatar.id)}
+            title={avatar.nombre}
+          >
+            <AvatarSprite avatarId={avatar.id} size={88} alt={avatar.nombre} />
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

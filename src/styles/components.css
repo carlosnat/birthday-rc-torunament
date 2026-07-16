@@ -106,3 +106,28 @@ table.tabla th { color: var(--text-dim); font-weight: 400; }
 .text-dim { color: var(--text-dim); }
 .text-rojo { color: var(--rojo-f1); font-weight: 700; }
 .text-morado { color: var(--morado); font-weight: 700; }
+
+.avatar-sprite {
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+}
+
+.avatar-sprite img {
+  position: absolute;
+  max-width: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.avatar-sprite--fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  font-size: 14px;
+  font-weight: 700;
+}

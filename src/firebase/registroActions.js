@@ -7,6 +7,8 @@ import { TORNEO_ID } from '../currentTorneo.js'
 import { pushPath, writePath, readPath, updatePath, logEvento } from './tournamentDb.js'
 import { TORNEO } from '../domain/constants.js'
 import { coloresDisponibles, getColor } from '../domain/colors.js'
+import { getAvatar, DEFAULT_AVATAR_ID } from '../domain/avatars.js'
+import { crearParticipante, participantesNormalizados } from '../domain/participants.js'
 
 const T = TORNEO_ID
 
@@ -15,10 +17,12 @@ function enRegistro(torneo) {
 }
 
 /** Crea un equipo nuevo con su color (identidad) y su primer participante. */
-export async function crearEquipo(torneo, { nombre, colorId, participante }) {
+export async function crearEquipo(torneo, { nombre, colorId, participante, avatarId }) {
   if (!enRegistro(torneo)) return { ok: false, motivo: 'REGISTRO_CERRADO' }
   if (!nombre?.trim() || !participante?.trim()) return { ok: false, motivo: 'DATOS_INCOMPLETOS' }
   if (!getColor(colorId)) return { ok: false, motivo: 'COLOR_INVALIDO' }
+
+  const avatarValido = getAvatar(avatarId) ? avatarId : DEFAULT_AVATAR_ID
 
   const libres = coloresDisponibles(torneo.equipos).map((c) => c.id)
   if (!libres.includes(colorId)) return { ok: false, motivo: 'COLOR_TOMADO' }
@@ -26,7 +30,7 @@ export async function crearEquipo(torneo, { nombre, colorId, participante }) {
   const equipo = {
     nombre: nombre.trim().toUpperCase(),
     color: colorId,
-    participantes: [participante.trim()],
+    participantes: [crearParticipante(participante, avatarValido)],
   }
   const refEq = await pushPath(P.equipos(T), equipo)
   await logEvento(T, 'EQUIPO_CREADO', { equipo: refEq.key, nombre: equipo.nombre, color: colorId })
@@ -34,14 +38,15 @@ export async function crearEquipo(torneo, { nombre, colorId, participante }) {
 }
 
 /** Suma un participante a un equipo existente. */
-export async function unirseEquipo(torneo, eqId, participante) {
+export async function unirseEquipo(torneo, eqId, participante, avatarId) {
   if (!enRegistro(torneo)) return { ok: false, motivo: 'REGISTRO_CERRADO' }
   if (!participante?.trim()) return { ok: false, motivo: 'DATOS_INCOMPLETOS' }
 
   const eq = torneo.equipos?.[eqId]
   if (!eq) return { ok: false, motivo: 'EQUIPO_INEXISTENTE' }
 
-  const participantes = [...(eq.participantes || []), participante.trim()]
+  const avatarValido = getAvatar(avatarId) ? avatarId : DEFAULT_AVATAR_ID
+  const participantes = [...participantesNormalizados(eq), crearParticipante(participante, avatarValido)]
   await writePath(`${P.equipo(T, eqId)}/participantes`, participantes)
   await logEvento(T, 'PARTICIPANTE', { equipo: eqId, nombre: participante.trim() })
   return { ok: true, eqId }

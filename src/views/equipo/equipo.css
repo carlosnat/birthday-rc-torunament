@@ -45,6 +45,31 @@
 }
 .equipo-pick.sel { border-color: var(--text); }
 
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(72px, 1fr));
+  gap: 12px;
+}
+
+.avatar-option {
+  aspect-ratio: 1 / 1;
+  border: 3px solid transparent;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--bg-elev-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-option:hover { border-color: var(--text-dim); }
+
+.avatar-option.selected {
+  border-color: var(--rojo-f1);
+  transform: scale(1.03);
+}
+
 .eq-top {
   display: flex;
   justify-content: space-between;
@@ -228,3 +253,9 @@
   text-align: left;
 }
 .eq-espera { text-align: center; }
+
+@media (max-width: 600px) {
+  .avatar-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

@@ -26,7 +26,7 @@ export function nuevoTorneoId() {
  * Si el host resultante es localhost/127.0.0.1, el QR no será alcanzable desde el celular.
  */
 export function publicOrigin() {
-  const override = '192.168.3.41:5173' || params.get('host') || import.meta.env.VITE_PUBLIC_HOST
+  const override = '192.168.1.94:5173' || params.get('host') || import.meta.env.VITE_PUBLIC_HOST
   const host = override || window.location.host
   return `${window.location.protocol}//${host}`
 }

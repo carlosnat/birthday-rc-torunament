@@ -8,6 +8,7 @@ import ColorBadge from '../../components/ColorBadge.jsx'
 import QRRegistro from '../../components/QRRegistro.jsx'
 import { clasificar } from '../../domain/classification.js'
 import { CARRITO, TORNEO } from '../../domain/constants.js'
+import { avatarDeEquipo } from '../../domain/participants.js'
 import { esSesionTemporizada, formatCountdown, tiempoRestanteEn } from '../../domain/sessionTimer.js'
 import { urlRol } from '../../currentTorneo.js'
 
@@ -46,7 +47,7 @@ export default function PublicoEspejo() {
               {equipos.length === 0 && <span className="text-dim">TODAVÍA NADIE…</span>}
               {equipos.map(([id, eq]) => (
                 <div key={id} className="row" style={{ justifyContent: 'space-between' }}>
-                  <ColorBadge colorId={eq.color} nombre={eq.nombre} />
+                  <ColorBadge colorId={eq.color} nombre={eq.nombre} avatarId={avatarDeEquipo(eq)} />
                   <span className="text-dim">{(eq.participantes || []).length} INT.</span>
                 </div>
               ))}
@@ -71,7 +72,7 @@ export default function PublicoEspejo() {
                 return (
                   <tr key={r.eqId} style={{ opacity: dnf ? 0.5 : 1 }}>
                     <td>{r.posicion}</td>
-                    <td><ColorBadge colorId={eq?.color} nombre={eq?.nombre} /></td>
+                    <td><ColorBadge colorId={eq?.color} nombre={eq?.nombre} avatarId={avatarDeEquipo(eq, s.pilotos?.[r.eqId])} /></td>
                     <td>{r.vueltas}{dnf ? ' (DNF)' : ''}</td>
                     <td>{r.ultimaVuelta ?? '—'}</td>
                     <td className="text-morado">{r.mejorVuelta ?? '—'}</td>

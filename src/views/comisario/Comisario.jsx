@@ -12,6 +12,7 @@ import SensorHealth from '../../components/SensorHealth.jsx'
 import * as A from '../../firebase/raceActions.js'
 import { moverSensor } from '../../firebase/registroActions.js'
 import { TORNEO, SESION, CARRITO } from '../../domain/constants.js'
+import { avatarDeEquipo, participantesNormalizados } from '../../domain/participants.js'
 import { esSesionTemporizada, formatCountdown, tiempoRestanteEn } from '../../domain/sessionTimer.js'
 import { TORNEO_ID, irA, urlRol } from '../../currentTorneo.js'
 import './comisario.css'
@@ -204,13 +205,15 @@ function Pilotos({ torneo }) {
       <div className="stack" style={{ gap: 6 }}>
         {Object.entries(torneo.equipos || {}).map(([eqId, eq]) => {
           const piloto = s.pilotos?.[eqId]
+          const participantes = participantesNormalizados(eq)
+          const avatarId = avatarDeEquipo(eq, piloto)
           return (
             <div key={eqId} className="row" style={{ justifyContent: 'space-between' }}>
-              <ColorBadge colorId={eq.color} nombre={eq.nombre} />
+              <ColorBadge colorId={eq.color} nombre={eq.nombre} avatarId={avatarId} />
               <select className="input" value={piloto || ''} onChange={(e) => A.asignarPiloto(torneo, eqId, e.target.value)}>
                 <option value="">— SIN PILOTO —</option>
-                {(eq.participantes || []).map((p) => (
-                  <option key={p} value={p}>{p}</option>
+                {participantes.map((p) => (
+                  <option key={p.id} value={p.nombre}>{p.nombre}</option>
                 ))}
               </select>
             </div>
