@@ -21,13 +21,17 @@ export function nuevoTorneoId() {
 /**
  * Origin público para los QR/enlaces. Prioridad:
  *  1) ?host= en la URL (override manual)
- *  2) VITE_PUBLIC_HOST del entorno (.env.local, ej: 192.168.3.41:5173)
- *  3) el host actual (window.location.host)
- * Si el host resultante es localhost/127.0.0.1, el QR no será alcanzable desde el celular.
+ *  2) VITE_PUBLIC_HOST del entorno (.env.local, ej: 192.168.1.89:5173)
+ *  3) el host actual (window.location.host, automático en rc-race-timing.web.app)
+ * En local, si no hay VITE_PUBLIC_HOST, el QR usará localhost (no alcanzable desde celular).
  */
 export function publicOrigin() {
-  const override = '192.168.1.94:5173' || params.get('host') || import.meta.env.VITE_PUBLIC_HOST
-  const host = override || window.location.host
+  const urlOverride = params.get('host')
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+
+  // Priority: URL override > env var (si es local) > host actual
+  let host = urlOverride || (isLocal && import.meta.env.VITE_PUBLIC_HOST) || window.location.host
+
   return `${window.location.protocol}//${host}`
 }
 
