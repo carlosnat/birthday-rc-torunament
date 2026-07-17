@@ -119,7 +119,7 @@ function AvatarSelector({ listaAvatares, avatarId, setAvatarId }) {
             onClick={() => setAvatarId(avatar.id)}
             title={avatar.nombre}
           >
-            <AvatarSprite avatarId={avatar.id} size={88} alt={avatar.nombre} />
+            <AvatarSprite avatarId={avatar.id} size={72} alt={avatar.nombre} />
           </button>
         ))}
       </div>

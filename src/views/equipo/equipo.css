@@ -1,10 +1,25 @@
 /* src/views/equipo/equipo.css — tablero del ingeniero de pista (celular) */
 .eq {
-  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: min(100%, 480px);
+  min-width: 0;
+  min-height: calc(100dvh - (var(--sp-3) * 2));
+  overflow: hidden;
   margin: 0 auto;
   --eq-color: var(--text);
 }
-.eq h1 { font-size: 20px; letter-spacing: 1px; }
+.eq.stack { gap: var(--sp-2); }
+.eq h1 { font-size: clamp(18px, 4vw, 20px); letter-spacing: 1px; }
+
+.eq .row {
+  gap: var(--sp-1);
+}
+
+.eq .panel {
+  min-width: 0;
+}
 
 .input {
   font-family: var(--font);
@@ -47,8 +62,8 @@
 
 .avatar-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(72px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, minmax(56px, 1fr));
+  gap: 8px;
 }
 
 .avatar-option {
@@ -74,7 +89,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
   margin-bottom: var(--sp-3);
+}
+.eq-top .badge {
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 220px;
 }
 .eq-sesion { color: var(--text-dim); margin-bottom: var(--sp-2); }
 .eq-countdown {
@@ -96,24 +118,24 @@
 }
 .eq-pos-label { color: var(--text-dim); font-size: 13px; letter-spacing: 2px; }
 .eq-pos {
-  font-size: 84px;
+  font-size: clamp(56px, 20vw, 84px);
   font-weight: 700;
   line-height: 1;
   color: var(--eq-color);
 }
-.eq-gap { color: var(--amarillo); font-weight: 700; font-size: 20px; }
+.eq-gap { color: var(--amarillo); font-weight: 700; font-size: clamp(16px, 4vw, 20px); }
 
 .eq-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--sp-2);
+  gap: var(--sp-1);
   margin-bottom: var(--sp-3);
 }
 .eq-laps-panel {
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: var(--sp-3);
+  padding: var(--sp-2);
   margin-bottom: var(--sp-3);
 }
 .eq-laps-header {
@@ -147,6 +169,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--sp-2);
   margin-bottom: var(--sp-2);
 }
@@ -171,6 +194,9 @@
   display: flex;
   align-items: center;
   gap: var(--sp-2);
+  margin-left: auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .eq-laps-toggle {
   min-width: 84px;
@@ -228,21 +254,21 @@
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: var(--sp-3);
+  padding: var(--sp-2);
   text-align: center;
 }
 .eq-metric-label { color: var(--text-dim); font-size: 12px; letter-spacing: 1px; }
-.eq-metric-value { font-size: 32px; font-weight: 700; }
+.eq-metric-value { font-size: clamp(22px, 7vw, 32px); font-weight: 700; }
 
 .eq-piloto {
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: var(--sp-3);
+  padding: var(--sp-2);
   text-align: center;
 }
-.eq-piloto-actual { font-size: 24px; font-weight: 700; margin: var(--sp-1) 0 var(--sp-2); }
-.eq-piloto-btns { display: flex; flex-wrap: wrap; gap: var(--sp-2); justify-content: center; }
+.eq-piloto-actual { font-size: clamp(18px, 5vw, 24px); font-weight: 700; margin: var(--sp-1) 0 var(--sp-2); }
+.eq-piloto-btns { display: flex; flex-wrap: wrap; gap: var(--sp-1); justify-content: center; }
 
 .eq-elegir {
   background: var(--bg-elev-2);
@@ -255,7 +281,22 @@
 .eq-espera { text-align: center; }
 
 @media (max-width: 600px) {
+  .eq {
+    min-height: calc(100dvh - (var(--sp-2) * 2));
+  }
+
+  .eq-pos-box,
+  .eq-laps-panel,
+  .eq-piloto,
+  .eq-metric {
+    padding: var(--sp-2);
+  }
+
   .avatar-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .eq-laps-list {
+    max-height: 180px;
   }
 }
