@@ -14,6 +14,7 @@ import BanderaCuadros from '../../components/BanderaCuadros.jsx'
 import Podio from '../../components/Podio.jsx'
 import Confeti from '../../components/Confeti.jsx'
 import TablaPuntos from '../../components/TablaPuntos.jsx'
+import VueltasVivasPanel from '../../components/VueltasVivasPanel.jsx'
 import { clasificar, vueltaRapida } from '../../domain/classification.js'
 import { puntosAcumulados, calcularGaps } from '../../domain/standings.js'
 import { TORNEO, SESION } from '../../domain/constants.js'
@@ -71,7 +72,9 @@ export default function Publico() {
         </div>
       </div>
 
-      <FilaTresPlaceholder />
+      <div className="pub-row-3">
+        <VueltasVivasPanel sesion={s} equipos={equipos} sensores={torneo.sensores} />
+      </div>
     </div>
   )
 }
@@ -209,15 +212,4 @@ function SemaforoSiCorresponde({ s, sonido }) {
   const alguienConVueltas = Object.values(s.carritos || {}).some((c) => (c.vueltas || 0) > 0 || c.cronoInicio)
   if (!alguienConVueltas) return <SemaforoF1 estado={s.estado} sonido={sonido} />
   return null
-}
-
-function FilaTresPlaceholder() {
-  return (
-    <div className="pub-row-3">
-      <div className="pub-panel pub-placeholder">
-        <div className="pub-panel-title">FILA 3 · NUEVO COMPONENTE</div>
-        <div className="pub-dim">ESPACIO RESERVADO PARA EL PRÓXIMO MÓDULO</div>
-      </div>
-    </div>
-  )
 }

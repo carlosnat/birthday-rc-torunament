@@ -10,9 +10,16 @@ import { useTorneo } from '../../context/TournamentContext.jsx'
 import { COLORES_LISTA, getColor } from '../../domain/colors.js'
 import { TORNEO_ID } from '../../currentTorneo.js'
 import * as R from '../../firebase/registroActions.js'
-import { pasadaPorColor } from '../../firebase/raceActions.js'
+import { pasadaPorColor, registrarDeteccionSectorSensor } from '../../firebase/raceActions.js'
 import RegistroSensor from './RegistroSensor.jsx'
 import './sensor.css'
+
+// Mapea colorId → equipoId (igual que en raceActions)
+function equipoPorColor(torneo, colorId) {
+  const entrada = Object.entries(torneo?.equipos || {})
+    .find(([, eq]) => eq.color === colorId)
+  return entrada ? entrada[0] : null
+}
 
 const MAX_LOG = 20
 const LS_KEY = TORNEO_ID ? `sensor:${TORNEO_ID}` : null
@@ -30,18 +37,29 @@ export default function Sensor() {
 
   // Refs para que el hot-loop y el heartbeat lean el último estado sin recrear el detector.
   const torneoRef = useRef(torneo)
-  const metaRef = useRef(esMeta)
+  const ordenRef = useRef(sensorInfo?.orden)
   const bateriaRef = useRef(bateria)
   const fpsRef = useRef(0)
   useEffect(() => { torneoRef.current = torneo }, [torneo])
-  useEffect(() => { metaRef.current = esMeta }, [esMeta])
+  useEffect(() => { ordenRef.current = sensorInfo?.orden }, [sensorInfo?.orden])
   useEffect(() => { bateriaRef.current = bateria }, [bateria])
 
   const onDetection = useCallback((d) => {
     let enviado = false
-    if (TORNEO_ID && metaRef.current && torneoRef.current) {
-      enviado = true
-      pasadaPorColor(torneoRef.current, d.colorId, Date.now())
+    if (TORNEO_ID && torneoRef.current) {
+      const orden = ordenRef.current
+      if (orden === 0) {
+        // META: cierra la vuelta.
+        enviado = true
+        pasadaPorColor(torneoRef.current, d.colorId, Date.now())
+      } else if (orden > 0) {
+        // SECTOR: cierra el sector anterior. El color identifica al equipo.
+        const eqId = equipoPorColor(torneoRef.current, d.colorId)
+        if (eqId) {
+          enviado = true
+          registrarDeteccionSectorSensor(torneoRef.current, orden, eqId, Date.now())
+        }
+      }
     }
     setLog((prev) => [{ ...d, hora: new Date().toLocaleTimeString(), enviado }, ...prev].slice(0, MAX_LOG))
   }, [])

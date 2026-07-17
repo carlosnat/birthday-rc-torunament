@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import { useTorneo } from '../../context/TournamentContext.jsx'
 import { useNow } from '../../hooks/useNow.js'
 import ColorBadge from '../../components/ColorBadge.jsx'
+import VueltaEnEjecucion from '../../components/VueltaEnEjecucion.jsx'
 import { clasificar } from '../../domain/classification.js'
 import { calcularGaps, puntosAcumulados } from '../../domain/standings.js'
 import { getColor } from '../../domain/colors.js'
@@ -94,6 +95,8 @@ export default function Equipo() {
             <div className="eq-pos">{miPos ? miPos.posicion : '—'}</div>
             <div className="eq-gap">{miPos ? (carrito?.estado === CARRITO.DNF ? 'DNF' : gaps[eqId]) : ''}</div>
           </div>
+
+          {enCarrera && <VueltaEnEjecucion carrito={carrito} sesion={s} sensores={torneo.sensores} />}
 
           <div className="eq-grid">
             <Metric label="VUELTA" value={s.vueltasObjetivo > 0 ? `${vueltaActual}/${s.vueltasObjetivo}` : vueltaActual} />

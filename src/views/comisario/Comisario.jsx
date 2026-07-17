@@ -319,13 +319,52 @@ function Sensores({ torneo }) {
 }
 
 function LogEventos() {
-  const eventos = useEventos(50)
+  const { torneo } = useTorneo()
+  const eventos = useEventos(100)
+  const [filtroSensores, setFiltroSensores] = useState(true)
+
+  const sensoresMap = torneo?.sensores || {}
+  const sensores = Object.entries(sensoresMap)
+    .map(([id, s]) => ({ id, ...s }))
+    .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+
+  // Filtrar eventos de sensores
+  const eventosFiltrados = filtroSensores
+    ? eventos.filter(e => e.tipo.startsWith('DETECCION') || e.tipo === 'SENSOR_REGISTRADO')
+    : eventos
+
   return (
     <div className="panel">
+      <h2>SENSORES Y DETECCIONES</h2>
+
+      {/* Panel de sensores registrados */}
+      <div style={{ marginBottom: 16, padding: 8, background: '#f5f5f5', borderRadius: 4 }}>
+        <div className="text-dim" style={{ marginBottom: 6 }}>SENSORES REGISTRADOS ({sensores.length})</div>
+        {sensores.length === 0 ? (
+          <span className="text-dim">NINGUNO</span>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8 }}>
+            {sensores.map(s => (
+              <div key={s.id} style={{ fontSize: '12px', padding: '6px 8px', background: '#fff', borderRadius: 3, border: '1px solid #ddd' }}>
+                <div><b>{s.nombre}</b> (orden {s.orden})</div>
+                <div className="text-dim" style={{ wordBreak: 'break-all', fontSize: '10px' }}>{s.id}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={{ marginBottom: 8 }}>
+        <label style={{ cursor: 'pointer' }}>
+          <input type="checkbox" checked={filtroSensores} onChange={(e) => setFiltroSensores(e.target.checked)} />
+          {' '}Mostrar solo eventos de sensores
+        </label>
+      </div>
+
       <h2>LOG DE EVENTOS</h2>
       <div className="log">
-        {eventos.map((e) => {
-          const esRechazo = e.tipo === 'RECHAZO' || e.tipo === 'PASADA_RECHAZADA'
+        {eventosFiltrados.map((e) => {
+          const esRechazo = e.tipo === 'RECHAZO' || e.tipo.includes('RECHAZADA')
           const hora = new Date(e.ts).toLocaleTimeString()
           return (
             <div key={e.id} className={`log-item ${esRechazo ? 'log-item--rechazo' : ''}`}>

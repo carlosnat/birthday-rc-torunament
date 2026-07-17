@@ -1,7 +1,7 @@
 // src/hooks/useDetector.js
 // Hot-loop de detección de color aislado del render de React.
 // getUserMedia (cámara trasera) + análisis de una franja central (zona de meta) +
-// conversión RGB->HSV por software + conteo simultáneo de los 4 colores de Post-it.
+// conversión RGB->HSV por software + conteo simultáneo de los colores de Post-it.
 //
 // El bucle corre en requestAnimationFrame y acumula en refs; el estado de React
 // (fps, píxeles por color) se refresca ~5 veces/seg para no pagar re-render por frame.

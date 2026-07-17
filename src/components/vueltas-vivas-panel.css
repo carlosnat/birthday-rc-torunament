@@ -1,0 +1,82 @@
+.pub-vueltas-vivas {
+  grid-column: 1 / -1;
+}
+
+.vueltas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.vuelta-viva-card {
+  background: var(--bg-card, #fff);
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .vuelta-viva-card {
+    background: #222;
+    border-color: #444;
+  }
+}
+
+.vuelta-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+@media (prefers-color-scheme: dark) {
+  .vuelta-header {
+    border-bottom-color: #444;
+  }
+}
+
+.vuelta-equipo-color {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.vuelta-equipo-nombre {
+  font-weight: bold;
+  font-size: 14px;
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Ajustar componente VueltaEnEjecucion cuando está en panel */
+.vuelta-viva-card .vuelta-en-ejecucion {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.vuelta-viva-card .crono-grande {
+  font-size: 36px;
+  margin: 8px 0;
+}
+
+.vuelta-viva-card .sectores-grid {
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+}
+
+.vuelta-viva-card .sector-tiempo {
+  font-size: 16px;
+}
+
+.vuelta-viva-card .sector-delta {
+  font-size: 10px;
+}

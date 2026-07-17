@@ -1,5 +1,5 @@
 // src/domain/colors.js
-// Los 4 colores de Post-it neón. El COLOR = identidad del equipo durante todo el torneo.
+// Colores de Post-it neón. El COLOR = identidad del equipo durante todo el torneo.
 // Rangos HSV (escala OpenCV 0-180) reservados para el sensor (Hito 3); en Hito 1 se usa hex.
 
 export const COLORES = Object.freeze({
@@ -28,6 +28,13 @@ export const COLORES = Object.freeze({
     hex: '#7cff2a',
     // validado experimentalmente en la POC
     hsv: { hMin: 38, hMax: 80, sMin: 100, vMin: 100 },
+  },
+  fucsia: {
+    id: 'fucsia',
+    nombre: 'FUCSIA FLUORESCENTE',
+    hex: '#ff2ad4',
+    // rango inicial para magenta/fucsia neón, ajustar en calibración real
+    hsv: { hMin: 145, hMax: 175, sMin: 110, vMin: 120 },
   },
 })
 

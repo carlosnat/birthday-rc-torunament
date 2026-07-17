@@ -1,0 +1,133 @@
+.vuelta-en-ejecucion {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px;
+  background: var(--bg-panel, #f5f5f5);
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .vuelta-en-ejecucion {
+    background: #1a1a1a;
+  }
+}
+
+.crono-grande {
+  font-size: 48px;
+  font-weight: bold;
+  text-align: center;
+  font-family: 'Monaco', 'Courier New', monospace;
+  letter-spacing: 2px;
+  color: #0a0a0a;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  .crono-grande {
+    color: #fff;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.sectores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.sector-card {
+  padding: 12px;
+  border-radius: 6px;
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.sector-card.sector-vacio {
+  background: #e0e0e0;
+  color: #666;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sector-card.sector-vacio {
+    background: #333;
+    color: #999;
+  }
+}
+
+/* Verde: mejoró */
+.sector-card.sector-verde {
+  background: #c8e6c9;
+  border-color: #43a047;
+  color: #1b5e20;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sector-card.sector-verde {
+    background: #1b5e20;
+    color: #a5d6a7;
+    border-color: #43a047;
+  }
+}
+
+/* Amarillo: empeoró */
+.sector-card.sector-amarillo {
+  background: #fff9c4;
+  border-color: #fbc02d;
+  color: #f57f17;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sector-card.sector-amarillo {
+    background: #f57f17;
+    color: #fff9c4;
+    border-color: #fbc02d;
+  }
+}
+
+/* Morado: mejor de sesión */
+.sector-card.sector-morado {
+  background: #e1bee7;
+  border-color: #8e24aa;
+  color: #4a148c;
+  font-weight: bold;
+  box-shadow: 0 0 12px rgba(142, 36, 170, 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sector-card.sector-morado {
+    background: #4a148c;
+    color: #e1bee7;
+    border-color: #8e24aa;
+    box-shadow: 0 0 12px rgba(142, 36, 170, 0.6);
+  }
+}
+
+.sector-nombre {
+  font-size: 12px;
+  font-weight: bold;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.sector-tiempo {
+  font-size: 24px;
+  font-weight: bold;
+  font-family: 'Monaco', 'Courier New', monospace;
+  letter-spacing: 1px;
+  margin: 8px 0;
+}
+
+.sector-delta {
+  font-size: 11px;
+  font-weight: bold;
+  opacity: 0.8;
+  margin-top: 4px;
+}

@@ -10,7 +10,7 @@ import { writePath, updatePath, logEvento } from './tournamentDb.js'
 import { crearTorneo } from './tournamentDb.js'
 import { TORNEO, CIRCUITO, SESION, CARRITO } from '../domain/constants.js'
 import { puedeTorneo, puedeSesion, puedeCircuito } from '../domain/stateMachine.js'
-import { registrarPasada, carritoInicial } from '../domain/lapTiming.js'
+import { registrarPasada, registrarDeteccionSector, carritoInicial } from '../domain/lapTiming.js'
 import { clasificar } from '../domain/classification.js'
 import { siguientePaso } from '../domain/progression.js'
 import { esSesionTemporizada, snapshotCronometro } from '../domain/sessionTimer.js'
@@ -217,6 +217,40 @@ export async function pasada(torneo, eqId, ts = Date.now()) {
     tipo: res.tipo,
     vuelta: res.vueltaNro,
     deltaMs: res.deltaMs ?? null,
+  })
+  return res
+}
+
+// Rechazos que ocurren en cada frame mientras el carrito está quieto frente a la cámara.
+// Loguearlos inunda RTDB (varios por segundo) y tapa el log del comisario.
+const RECHAZOS_SILENCIOSOS = new Set(['SESION_NO_ACEPTA', 'CARRITO_INACTIVO', 'REBOTE', 'VUELTA_NO_ABIERTA'])
+
+/**
+ * Detección de un sensor de sector (orden >= 1). El sensor pasa su propio orden: no
+ * dependemos de que el snapshot del torneo tenga ya el sensor indexado.
+ */
+export async function registrarDeteccionSectorSensor(torneo, sensorOrden, eqId, ts = Date.now()) {
+  const s = sesionActivaDe(torneo)
+  if (!s) return { aceptada: false, motivo: 'SIN_SESION_ACTIVA' }
+  const carrito = s.carritos?.[eqId]
+  if (!carrito) return { aceptada: false, motivo: 'SIN_CARRITO' }
+
+  const res = registrarDeteccionSector(carrito, sensorOrden, ts, { sesionEstado: s.estado })
+
+  if (!res.aceptada) {
+    if (!RECHAZOS_SILENCIOSOS.has(res.motivo)) {
+      await logEvento(T, 'DETECCION_RECHAZADA', { sesion: s.id, orden: sensorOrden, equipo: eqId, motivo: res.motivo, deltaMs: res.deltaMs ?? null })
+    }
+    return res
+  }
+
+  await writePath(P.carrito(T, s.id, eqId), res.carrito)
+  await logEvento(T, res.tipo, {
+    sesion: s.id,
+    equipo: eqId,
+    orden: sensorOrden,
+    sectorId: res.sectorId,
+    tiempoMs: res.tiempoMs,
   })
   return res
 }

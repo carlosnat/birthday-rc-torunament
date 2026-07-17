@@ -39,4 +39,5 @@ export const EQUIPOS_DEMO = {
   eq_naranja: { nombre: 'ESCUDERÍA NARANJA', color: 'naranja', participantes: ['Caro', 'Dani'] },
   eq_azul: { nombre: 'ESCUDERÍA AZUL', color: 'azul', participantes: ['Edu', 'Feli'] },
   eq_verde: { nombre: 'ESCUDERÍA VERDE', color: 'verde', participantes: ['Gabo', 'Hugo'] },
+  eq_fucsia: { nombre: 'ESCUDERÍA FUCSIA', color: 'fucsia', participantes: ['Iara', 'Juli'] },
 }

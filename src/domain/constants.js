@@ -39,3 +39,13 @@ export const TIPO_SESION = Object.freeze({
 
 // Puntuación estilo F1 por defecto (25-18-15-12). Se guarda en config del torneo.
 export const PUNTUACION_F1 = Object.freeze([25, 18, 15, 12])
+
+export const SECTOR = Object.freeze({
+  VALIDO: 'VALIDO',
+  FALTANTE: 'FALTANTE',
+  FUERA_SECUENCIA: 'FUERA_SECUENCIA',
+})
+
+// Sector timing: anti-rebote y tiempo mínimo
+export const COOLDOWN_SECTOR = 100 // ms, anti-rebote por sensor (muy bajo para detectar cada paso)
+export const TIEMPO_MINIMO_SECTOR = 1000 // ms, tiempo mínimo entre sensores
