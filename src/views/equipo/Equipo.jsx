@@ -18,6 +18,7 @@ import { esSesionTemporizada, formatCountdown, tiempoRestanteEn } from '../../do
 import { TORNEO_ID } from '../../currentTorneo.js'
 import * as A from '../../firebase/raceActions.js'
 import RegistroEquipo from './RegistroEquipo.jsx'
+import EquipoFooterMenu from './components/EquipoFooterMenu.jsx'
 import './equipo.css'
 
 const LS_KEY = TORNEO_ID ? `equipo:${TORNEO_ID}` : null
@@ -42,6 +43,7 @@ function vueltasDeEquipo(sesion, eqId) {
 export default function Equipo() {
   const { torneo, loading } = useTorneo()
   const [eqId, setEqId] = useState(() => (LS_KEY ? localStorage.getItem(LS_KEY) : null))
+  const [activeTab, setActiveTab] = useState('inicio')
   const now = useNow(1000)
 
   if (loading) return <div className="app eq">CARGANDO…</div>
@@ -78,59 +80,92 @@ export default function Equipo() {
   const enCarrera = carrito?.estado === CARRITO.EN_CARRERA
   const vueltaActual = enCarrera ? (carrito.vueltas || 0) + 1 : carrito?.vueltas || 0
 
+  const panelEstado = (
+    <>
+      <div className="eq-sesion">{torneo.circuitoActivo} · {s.tipo} · <b>{s.estado}</b></div>
+      {temporizada && <div className="eq-countdown">TIEMPO RESTANTE · {formatCountdown(restanteMs)}</div>}
+    </>
+  )
+
   return (
-    <div className="app eq" style={{ '--eq-color': color?.hex }}>
-      <div className="eq-top">
-        <ColorBadge colorId={miEquipo.color} nombre={miEquipo.nombre} avatarId={avatarId} />
-        <button className="btn btn--ghost" onClick={() => { if (LS_KEY) localStorage.removeItem(LS_KEY); setEqId(null) }}>CAMBIAR</button>
-      </div>
-
-      {s ? (
-        <>
-          <div className="eq-sesion">{torneo.circuitoActivo} · {s.tipo} · <b>{s.estado}</b></div>
-          {temporizada && <div className="eq-countdown">TIEMPO RESTANTE · {formatCountdown(restanteMs)}</div>}
-
-          <div className="eq-pos-box">
-            <div className="eq-pos-label">POSICIÓN</div>
-            <div className="eq-pos">{miPos ? miPos.posicion : '—'}</div>
-            <div className="eq-gap">{miPos ? (carrito?.estado === CARRITO.DNF ? 'DNF' : gaps[eqId]) : ''}</div>
-          </div>
-
-          {enCarrera && <VueltaEnEjecucion carrito={carrito} sesion={s} sensores={torneo.sensores} />}
-
-          <div className="eq-grid">
-            <Metric label="VUELTA" value={s.vueltasObjetivo > 0 ? `${vueltaActual}/${s.vueltasObjetivo}` : vueltaActual} />
-            <Metric label="ÚLTIMA" value={fmt(carrito?.ultimaVuelta)} />
-            <Metric label="MEJOR" value={fmt(carrito?.mejorVuelta)} morado />
-            <Metric label="PUNTOS" value={misPuntos} />
-          </div>
-
-          <div className="eq-laps-panel">
-            <div className="eq-laps-header">
-              <div className="eq-laps-title">TIEMPOS POR SESIÓN</div>
-              <div className="eq-laps-subtitle">Vuelta por vuelta del circuito actual</div>
-            </div>
-
-            <div className="eq-laps-groups">
-              {sesionesCircuito.map((sesion) => (
-                <SesionVueltas
-                  key={sesion.id}
-                  sesion={sesion}
-                  eqId={eqId}
-                  activa={sesion.id === s.id}
-                />
-              ))}
-            </div>
-          </div>
-
-          <Piloto torneo={torneo} eqId={eqId} equipo={miEquipo} sesion={s} />
-        </>
-      ) : (
-        <div className="eq-espera">
-          <div className="eq-sesion">SIN SESIÓN ACTIVA</div>
-          <Metric label="PUNTOS DEL CAMPEONATO" value={misPuntos} />
+    <div className="app eq eq-mobile-shell" style={{ '--eq-color': color?.hex }}>
+      <section className="eq-content stack">
+        <div className="eq-top">
+          <ColorBadge colorId={miEquipo.color} nombre={miEquipo.nombre} avatarId={avatarId} />
+          <button className="btn btn--ghost" onClick={() => { if (LS_KEY) localStorage.removeItem(LS_KEY); setEqId(null) }}>CAMBIAR</button>
         </div>
-      )}
+
+        {!s && (
+          <div className="eq-espera">
+            <div className="eq-sesion">SIN SESIÓN ACTIVA</div>
+            <Metric label="PUNTOS DEL CAMPEONATO" value={misPuntos} />
+          </div>
+        )}
+
+        {s && activeTab === 'inicio' && (
+          <>
+            {panelEstado}
+            <div className="eq-pos-box">
+              <div className="eq-pos-label">POSICIÓN</div>
+              <div className="eq-pos">{miPos ? miPos.posicion : '—'}</div>
+              <div className="eq-gap">{miPos ? (carrito?.estado === CARRITO.DNF ? 'DNF' : gaps[eqId]) : ''}</div>
+            </div>
+            <div className="eq-grid">
+              <Metric label="VUELTA" value={s.vueltasObjetivo > 0 ? `${vueltaActual}/${s.vueltasObjetivo}` : vueltaActual} />
+              <Metric label="ÚLTIMA" value={fmt(carrito?.ultimaVuelta)} />
+              <Metric label="MEJOR" value={fmt(carrito?.mejorVuelta)} morado />
+              <Metric label="PUNTOS" value={misPuntos} />
+            </div>
+          </>
+        )}
+
+        {s && activeTab === 'tiempos' && (
+          <>
+            {panelEstado}
+            {enCarrera ? (
+              <VueltaEnEjecucion carrito={carrito} sesion={s} sensores={torneo.sensores} />
+            ) : (
+              <div className="eq-metric eq-empty-panel">SIN VUELTA EN CURSO</div>
+            )}
+
+            <div className="eq-laps-panel">
+              <div className="eq-laps-header">
+                <div className="eq-laps-title">TIEMPOS POR SESIÓN</div>
+                <div className="eq-laps-subtitle">Vuelta por vuelta del circuito actual</div>
+              </div>
+
+              <div className="eq-laps-groups">
+                {sesionesCircuito.map((sesion) => (
+                  <SesionVueltas
+                    key={sesion.id}
+                    sesion={sesion}
+                    eqId={eqId}
+                    activa={sesion.id === s.id}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {s && activeTab === 'piloto' && (
+          <>
+            {panelEstado}
+            <Piloto torneo={torneo} eqId={eqId} equipo={miEquipo} sesion={s} />
+          </>
+        )}
+
+        {activeTab === 'equipo' && (
+          <div className="eq-grid">
+            <Metric label="EQUIPO" value={miEquipo.nombre} />
+            <Metric label="PUNTOS" value={misPuntos} />
+            <Metric label="COLOR" value={(getColor(miEquipo.color)?.nombre || miEquipo.color || '—').toUpperCase()} />
+            <Metric label="PILOTOS" value={participantesNormalizados(miEquipo).length} />
+          </div>
+        )}
+      </section>
+
+      <EquipoFooterMenu activeTab={activeTab} onChange={setActiveTab} />
     </div>
   )
 }

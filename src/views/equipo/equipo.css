@@ -15,6 +15,22 @@
 .eq.stack { gap: var(--sp-2); }
 .eq h1 { font-size: clamp(18px, 4vw, 20px); letter-spacing: 1px; }
 
+.eq-mobile-shell {
+  min-height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  padding: 0;
+}
+
+.eq-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: max(var(--sp-2), env(safe-area-inset-top)) var(--sp-3) calc(88px + env(safe-area-inset-bottom));
+  scroll-padding-top: calc(var(--sp-2) + env(safe-area-inset-top));
+  gap: var(--sp-2);
+}
+
 .eq-registro {
   overflow-y: auto;
   padding-top: max(var(--sp-2), env(safe-area-inset-top));
@@ -111,6 +127,54 @@
   width: min(100%, 520px);
   margin: 0 auto;
   pointer-events: auto;
+}
+
+.eq-footer-menu {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 28;
+  padding: 0 var(--sp-3) calc(var(--sp-2) + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+
+.eq-footer-menu-track {
+  max-width: 680px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgb(17 17 17 / 94%);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 45%);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+}
+
+.eq-footer-tab {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-dim);
+  padding: 10px 6px;
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.eq-footer-tab.is-active {
+  color: var(--text);
+  border-color: var(--rojo-f1);
+  background: rgb(225 6 0 / 16%);
+}
+
+.eq-footer-tab-label {
+  white-space: nowrap;
 }
 
 .avatar-option {
@@ -341,6 +405,11 @@
   letter-spacing: 1px;
 }
 
+.eq-empty-panel {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
 .eq-wizard {
   position: relative;
   padding: var(--sp-2);
@@ -428,6 +497,10 @@
     padding-bottom: calc(84px + env(safe-area-inset-bottom));
   }
 
+  .eq-content {
+    padding: max(var(--sp-1), env(safe-area-inset-top)) var(--sp-2) calc(84px + env(safe-area-inset-bottom));
+  }
+
   .eq-pos-box,
   .eq-laps-panel,
   .eq-piloto,
@@ -445,6 +518,16 @@
 
   .eq-laps-list {
     max-height: 180px;
+  }
+
+  .eq-footer-menu {
+    padding-left: var(--sp-2);
+    padding-right: var(--sp-2);
+  }
+
+  .eq-footer-tab {
+    font-size: 10px;
+    padding: 9px 4px;
   }
 
   .eq-wizard-title {
