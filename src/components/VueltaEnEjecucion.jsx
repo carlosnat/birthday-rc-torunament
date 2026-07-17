@@ -24,24 +24,50 @@ function ordenSector(sectorId) {
   return Number(sectorId.replace('sector_', ''))
 }
 
+// Formato F1. Milisegundos siempre a 3 dígitos.
+const ms3 = (ms) => String(ms % 1000).padStart(3, '0')
+
+/** Tiempo de vuelta / cronómetro: M:SS.mmm (ej. 1:23.456). */
+function formatLap(ms) {
+  if (ms == null) return '--:--.---'
+  const totalSecs = Math.floor(ms / 1000)
+  const mins = Math.floor(totalSecs / 60)
+  const secs = totalSecs % 60
+  return `${mins}:${String(secs).padStart(2, '0')}.${ms3(ms)}`
+}
+
+/** Tiempo de sector: SS.mmm (ej. 28.451). Muestra minutos solo si supera el minuto. */
+function formatSector(ms) {
+  if (ms == null) return '--.---'
+  if (ms >= 60000) return formatLap(ms)
+  return `${Math.floor(ms / 1000)}.${ms3(ms)}`
+}
+
+/** Delta con signo en segundos: -1.234 más rápido, +0.780 más lento. */
+function formatDelta(deltaMs) {
+  const signo = deltaMs < 0 ? '-' : '+'
+  return `${signo}${formatSector(Math.abs(deltaMs))}`
+}
+
 export default function VueltaEnEjecucion({ carrito, sesion, sensores }) {
   const [tiempoActualMs, setTiempoActualMs] = useState(0)
 
   const vaultaAbierta = carrito?.vaultaActualInicio != null
   const ahora = Date.now()
 
-  // Actualizar cronómetro cada 50ms
+  // Cronómetro por frame: mostramos milésimas, así que un setInterval de 50ms haría saltar
+  // el último dígito de a ~50. rAF además se frena solo si la pestaña no está visible.
+  const inicio = carrito?.vaultaActualInicio
   useEffect(() => {
     if (!vaultaAbierta) return
-
+    let raf
     const tick = () => {
-      const elapsed = Date.now() - carrito.vaultaActualInicio
-      setTiempoActualMs(elapsed)
+      setTiempoActualMs(Date.now() - inicio)
+      raf = requestAnimationFrame(tick)
     }
-
-    const interval = setInterval(tick, 50)
-    return () => clearInterval(interval)
-  }, [vaultaAbierta, carrito?.vaultaActualInicio])
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [vaultaAbierta, inicio])
 
   // Obtener vuelta anterior para comparar
   const vaultaAnterior = useMemo(() => {
@@ -51,25 +77,23 @@ export default function VueltaEnEjecucion({ carrito, sesion, sensores }) {
 
   // Mejores por sector, incluyendo la vuelta en curso: un sector cuenta apenas se cruza,
   // aunque la vuelta después no cierre. Sin los tiempos vivos, el morado nunca se dispara.
-  const { mejorSesion, mejorPersonal } = useMemo(() => {
+  // `mejorPersonalPrevio` sale solo de vueltas cerradas: es la referencia del delta, y el
+  // tiempo actual no puede compararse contra sí mismo.
+  const { mejorSesion, mejorPersonal, mejorPersonalPrevio } = useMemo(() => {
     const sesionMap = {}
     const personalMap = {}
+    const previoMap = {}
     for (const otro of Object.values(sesion?.carritos || {})) {
       recorrerSectores(otro, (sectorId, t) => acumularMejor(sesionMap, sectorId, t))
     }
     recorrerSectores(carrito, (sectorId, t) => acumularMejor(personalMap, sectorId, t))
-    return { mejorSesion: sesionMap, mejorPersonal: personalMap }
+    for (const lap of carrito?.lapHistory || []) {
+      for (const [sectorId, st] of Object.entries(lap.sectorTimes || {})) {
+        acumularMejor(previoMap, sectorId, st?.tiempoMs)
+      }
+    }
+    return { mejorSesion: sesionMap, mejorPersonal: personalMap, mejorPersonalPrevio: previoMap }
   }, [sesion?.carritos, carrito])
-
-  // Formatear tiempo mm:ss.ms
-  const formatearTiempo = (ms) => {
-    if (ms == null) return '--:--'
-    const totalSecs = Math.floor(ms / 1000)
-    const mins = Math.floor(totalSecs / 60)
-    const secs = totalSecs % 60
-    const milisecs = Math.floor((ms % 1000) / 10)
-    return `${mins}:${secs.toString().padStart(2, '0')}.${milisecs.toString().padStart(2, '0')}`
-  }
 
   // Convención F1: morado = mejor de la sesión, verde = tu récord personal, amarillo = el resto.
   // El propio tiempo está en los pools, así que el mínimo siempre es <=; la igualdad significa
@@ -104,24 +128,22 @@ export default function VueltaEnEjecucion({ carrito, sesion, sensores }) {
   return (
     <div className="vuelta-en-ejecucion">
       <div className="crono-grande">
-        {formatearTiempo(tiempoActualMs)}
+        {formatLap(tiempoActualMs)}
       </div>
 
       <div className="sectores-grid">
         {sectores.map((sectorId) => {
           const tiempoActual = carrito.sectorTimesActuales?.[sectorId]?.tiempoMs
-          const tiempoAnterior = vaultaAnterior?.sectorTimes?.[sectorId]?.tiempoMs
-          const colorClass = getColorSector(sectorId, tiempoActual)
+          const referencia = mejorPersonalPrevio[sectorId]
+          const delta = tiempoActual != null && referencia != null ? tiempoActual - referencia : null
 
           return (
-            <div key={sectorId} className={`sector-card ${colorClass}`}>
+            <div key={sectorId} className={`sector-card ${getColorSector(sectorId, tiempoActual)}`}>
               <div className="sector-nombre">{sectorId.replace('sector_', 'S')}</div>
-              <div className="sector-tiempo">
-                {tiempoActual != null ? formatearTiempo(tiempoActual) : '--:--'}
-              </div>
-              {tiempoAnterior != null && tiempoActual != null && (
-                <div className="sector-delta">
-                  {tiempoActual < tiempoAnterior ? '↓' : '↑'}{Math.abs(tiempoActual - tiempoAnterior).toFixed(0)}ms
+              <div className="sector-tiempo">{formatSector(tiempoActual)}</div>
+              {delta != null && (
+                <div className={`sector-delta ${delta < 0 ? 'delta-mejor' : 'delta-peor'}`}>
+                  {formatDelta(delta)}
                 </div>
               )}
             </div>
