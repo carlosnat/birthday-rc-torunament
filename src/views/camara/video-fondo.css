@@ -1,0 +1,52 @@
+/* El video de fondo de la pantalla pública.
+   Va fuera del flujo del grid (absolute): como hijo normal de .pub ocuparía una fila. */
+
+.pub-fondo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+/* cover y no contain, al revés que en el panel chico: acá el video ES la pantalla y las
+   barras negras romperían el efecto. El recorte cae en los bordes, que es justo donde están
+   la torre y las columnas tapando. Por eso el cartel de "poné el celular horizontal": en
+   vertical, cover recorta muchísimo. */
+.pub-fondo-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Sin esto, una toma clara deja los paneles ilegibles. Oscurece arriba (cabecera), abajo
+   (columnas) e izquierda (torre) — el centro, que es lo que se mira, queda casi limpio.
+   Es el mismo recurso que usa el broadcast de F1. */
+.pub-fondo-velo {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0.2) 20%,
+      rgba(0, 0, 0, 0.2) 60%,
+      rgba(0, 0, 0, 0.85) 100%
+    ),
+    linear-gradient(to right, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0) 34%);
+}
+
+.pub-fondo-vivo {
+  position: absolute;
+  top: clamp(8px, 1.4vh, 18px);
+  right: clamp(8px, 1vw, 18px);
+  font-size: clamp(9px, 1.2vh, 13px);
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #fff;
+  background: rgba(225, 6, 0, 0.9);
+  border-radius: 999px;
+  padding: 0.2em 0.7em;
+  animation: parpadeo 2s infinite;
+}

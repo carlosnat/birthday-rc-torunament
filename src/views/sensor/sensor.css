@@ -1,6 +1,5 @@
 /* src/views/sensor/sensor.css */
 .sensor { max-width: 520px; margin: 0 auto; }
-.text-verde { color: var(--verde); font-weight: 700; }
 
 .video-wrap {
   position: relative;

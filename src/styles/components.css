@@ -106,6 +106,8 @@ table.tabla th { color: var(--text-dim); font-weight: 400; }
 .text-dim { color: var(--text-dim); }
 .text-rojo { color: var(--rojo-f1); font-weight: 700; }
 .text-morado { color: var(--morado); font-weight: 700; }
+.text-verde { color: var(--verde); font-weight: 700; }
+.text-amarillo { color: var(--amarillo); font-weight: 700; }
 
 .avatar-sprite {
   display: inline-block;

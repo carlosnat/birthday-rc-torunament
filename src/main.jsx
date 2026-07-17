@@ -10,6 +10,7 @@ import Harness from './views/harness/Harness.jsx'
 import Publico from './views/publico/Publico.jsx'
 import PublicoEspejo from './views/publico/PublicoEspejo.jsx'
 import Sensor from './views/sensor/Sensor.jsx'
+import Camara from './views/camara/Camara.jsx'
 import Comisario from './views/comisario/Comisario.jsx'
 import Equipo from './views/equipo/Equipo.jsx'
 
@@ -23,6 +24,7 @@ const VISTAS = {
   espejo: PublicoEspejo,
   registro: Equipo,
   sensor: Sensor,
+  camara: Camara,
   comisario: Comisario,
   equipo: Equipo,
 }

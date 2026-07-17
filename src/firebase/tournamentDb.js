@@ -2,9 +2,10 @@
 // Operaciones de lectura/escritura sobre la RTDB. Primitivas + creación de torneos.
 // La lógica de negocio vive en domain/ y se orquesta en raceActions.js / registroActions.js.
 
-import { ref, set, update, get, push, remove, serverTimestamp } from 'firebase/database'
+import { ref, set, update, get, push, remove, runTransaction, serverTimestamp } from 'firebase/database'
 import { db } from './firebase.js'
 import * as P from './paths.js'
+import { raizWebrtc } from '../webrtc/signaling.js'
 import { TORNEO, CIRCUITO, SESION } from '../domain/constants.js'
 import { defSesion } from '../domain/progression.js'
 import { TORNEO_ID } from '../currentTorneo.js'
@@ -28,6 +29,22 @@ export function pushPath(path, value) {
 export async function readPath(path) {
   const snap = await get(ref(db, path))
   return snap.val()
+}
+
+/**
+ * Lectura-modificación-escritura atómica. Necesario cuando dos clientes pueden competir por
+ * el mismo recurso y "el último gana" no sirve (ej: tomar la cámara, que es exclusiva).
+ * `fn(actual)` debe devolver el valor nuevo, o `undefined` para abortar.
+ * @returns {Promise<{committed: boolean, valor: any}>}
+ */
+export async function transactPath(path, fn) {
+  const res = await runTransaction(ref(db, path), fn)
+  return { committed: res.committed, valor: res.snapshot.val() }
+}
+
+/** Key de push generada del lado del cliente, sin escribir nada todavía. */
+export function nuevaKey(path) {
+  return push(ref(db, path)).key
 }
 
 /** Log append-only (caja negra / auditoría). */
@@ -118,10 +135,13 @@ export async function seedTorneoDemo(t = TORNEO_ID, config = DEFAULT_CONFIG) {
   return t
 }
 
-/** Borra el torneo por completo. */
+/** Borra el torneo por completo, incluida la señalización que vive fuera de su árbol. */
 export function resetTorneo(t = TORNEO_ID) {
   return Promise.all([
     remove(ref(db, P.torneo(t))),
     remove(ref(db, `${P.torneosIndex()}/${t}`)),
+    // Vive fuera de torneos/{t} a propósito (ver signaling.js); si no se borra acá queda
+    // huérfano para siempre y la base acumula basura de cada torneo de prueba.
+    remove(ref(db, raizWebrtc(t))),
   ])
 }

@@ -9,6 +9,7 @@
 /* La fila 3 se mide por contenido (`auto`), no por fracción: son franjas finas al pie, como
    los widgets del broadcast. Dándole 1fr se comía media pantalla para mostrar "EN GRILLA". */
 .pub {
+  position: relative; /* ancla al video de fondo, que va absolute */
   height: 100dvh;
   max-width: 100%;
   box-sizing: border-box;
@@ -19,6 +20,24 @@
   overflow: hidden;
   background: radial-gradient(circle at 50% 0%, #1a1a1a 0%, var(--bg) 60%);
   color: var(--text);
+}
+
+/* Todo lo que no es el video va encima. VideoFondo se posiciona solo en z-index 0. */
+.pub > *:not(.pub-fondo) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Con video atrás, los paneles se vuelven traslúcidos para que la imagen respire.
+   0.72 medido contra el peor caso (una toma 100% blanca, sin contar el velo del fondo): deja
+   el texto blanco en 8.2:1. A 0.55 caía a 4.4:1 y perdía AA. El blur es lo que separa
+   "panel encima de un video" de "panel con un video encima". */
+.pub--con-video .tower,
+.pub--con-video .lateral-bloque,
+.pub--con-video .col-eq {
+  background: rgba(10, 10, 10, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .pub-center {
@@ -98,5 +117,11 @@
 @media (max-width: 560px) {
   .pub-fila-3 {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* 3 QR en columna serían ilegibles en un teléfono. */
+  .esc--qr {
+    grid-auto-flow: row;
+    grid-auto-rows: minmax(0, 1fr);
   }
 }

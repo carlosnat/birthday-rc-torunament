@@ -19,6 +19,8 @@ import Cabecera from './paneles/Cabecera.jsx'
 import PanelLateral from './paneles/PanelLateral.jsx'
 import Escenario from './paneles/Escenario.jsx'
 import ColumnaEquipo from './paneles/ColumnaEquipo.jsx'
+import VideoFondo from '../camara/VideoFondo.jsx'
+import { useCamaraViewer } from '../../webrtc/useCamaraViewer.js'
 import { clasificar, vueltaRapida } from '../../domain/classification.js'
 import { puntosAcumulados, calcularIntervalos } from '../../domain/standings.js'
 import { TORNEO, SESION } from '../../domain/constants.js'
@@ -29,6 +31,10 @@ export default function Publico() {
   const { torneo, loading } = useTorneo()
   const [sonido, setSonido] = useState(false)
   const now = useNow(1000)
+  // Vive acá y no en el panel: el Escenario monta/desmonta según el estado de la sesión, y
+  // ahí adentro la conexión se cortaría y se reharía en cada transición. Va antes de los
+  // returns de abajo porque los hooks no pueden quedar detrás de un condicional.
+  const camara = useCamaraViewer(torneo)
 
   if (loading) return <div className="pub-center">CARGANDO…</div>
   if (!torneo) return <div className="pub-center">TORNEO NO ENCONTRADO</div>
@@ -43,7 +49,11 @@ export default function Publico() {
   const lista = Object.entries(equipos)
 
   return (
-    <div className="pub">
+    <div className={`pub ${camara.stream ? 'pub--con-video' : ''}`}>
+      {/* Capa 0: la imagen es la pantalla. Todo lo de abajo flota encima, así el semáforo, la
+          bandera y el podio se superponen en vez de reemplazar el video. */}
+      <VideoFondo stream={camara.stream} estado={camara.estado} />
+
       {festejo && <Confeti active />}
 
       {!sonido && (
@@ -70,6 +80,7 @@ export default function Publico() {
           equipos={equipos}
           standings={standings}
           sonido={sonido}
+          camara={camara}
         />
       </div>
 

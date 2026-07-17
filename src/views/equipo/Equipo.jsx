@@ -80,12 +80,12 @@ export default function Equipo() {
   const enCarrera = carrito?.estado === CARRITO.EN_CARRERA
   const vueltaActual = enCarrera ? (carrito.vueltas || 0) + 1 : carrito?.vueltas || 0
 
-  const panelEstado = (
+  const panelEstado = s ? (
     <>
       <div className="eq-sesion">{torneo.circuitoActivo} · {s.tipo} · <b>{s.estado}</b></div>
       {temporizada && <div className="eq-countdown">TIEMPO RESTANTE · {formatCountdown(restanteMs)}</div>}
     </>
-  )
+  ) : null
 
   return (
     <div className="app eq eq-mobile-shell" style={{ '--eq-color': color?.hex }}>

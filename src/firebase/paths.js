@@ -5,6 +5,8 @@
 //     config, estado, circuitoActivo, sesionActiva
 //     circuitos/{cid} { estado }
 //     equipos/{eqId} { nombre, color, participantes }
+//     sensores/{sid} { nombre, orden, estado, lastHeartbeat }
+//     camaras/{camId} { nombre, estado, lastHeartbeat }
 //     sesiones/{sid} { estado, tipo, vueltasObjetivo, circuitoId, tiempoMinimoVuelta,
 //                      pilotos{eqId}, carritos/{eqId}{...}, resultados[] }
 //     eventos/{pushId} { ts, tipo, detalle }
@@ -25,6 +27,12 @@ export const equipo = (t, eq) => `torneos/${t}/equipos/${eq}`
 
 export const sensores = (t) => `torneos/${t}/sensores`
 export const sensor = (t, sid) => `torneos/${t}/sensores/${sid}`
+
+// Registro de cámaras (identidad + heartbeat). La señalización WebRTC NO vive acá: va en un
+// nodo top-level fuera del torneo, porque useTournament escucha este árbol entero y la
+// ráfaga de candidatos ICE re-renderizaría toda la app. Ver src/webrtc/signaling.js.
+export const camaras = (t) => `torneos/${t}/camaras`
+export const camara = (t, cid) => `torneos/${t}/camaras/${cid}`
 
 export const sesiones = (t) => `torneos/${t}/sesiones`
 export const sesion = (t, s) => `torneos/${t}/sesiones/${s}`
