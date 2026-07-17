@@ -2,12 +2,16 @@
    Todo en unidades relativas: la torre ocupa la altura que le da su celda del grid y
    scrollea internamente si hay más autos de los que entran, sin empujar la página. */
 
+/* Se ajusta al contenido y se ancla arriba: con 2 equipos, estirarla a todo el alto dejaba
+   un panel casi vacío. `max-height` evita que con muchos equipos desborde su celda. */
 .tower {
   display: flex;
   flex-direction: column;
+  align-self: start;
   min-height: 0;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.35);
+  max-height: 100%;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: clamp(6px, 0.8vh, 12px);
   box-sizing: border-box;
@@ -27,22 +31,44 @@
   font-size: clamp(11px, 1.2vh, 14px);
 }
 
-/* Encabezado y filas comparten la grilla, así las columnas quedan alineadas. */
+/* Encabezado y filas comparten la grilla, así las columnas quedan alineadas.
+   Una sola columna de diferencia: INTERVAL y GAP se alternan, no conviven. */
 .tower-encabezado,
 .tower-fila {
   display: grid;
-  grid-template-columns: 2ch minmax(0, 1fr) 7ch 7ch;
+  grid-template-columns: 2.5ch minmax(0, 1fr) 9ch;
   align-items: center;
-  gap: clamp(4px, 0.6vw, 10px);
+  gap: clamp(5px, 0.7vw, 12px);
+}
+
+/* Los dos títulos siempre visibles; el activo encendido. Así se ve cuál estás mirando y que
+   el otro existe, sin tener que adivinar cuándo rotó. */
+.tower-modos {
+  display: flex;
+  justify-content: flex-end;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.tower-modos b {
+  font-weight: bold;
+  color: var(--text-dim);
+  opacity: 0.4;
+  transition: opacity 0.25s ease, color 0.25s ease;
+}
+
+.tower-modos b.is-activo {
+  color: var(--amarillo);
+  opacity: 1;
 }
 
 .tower-encabezado {
   font-size: clamp(8px, 0.9vh, 10px);
   font-weight: bold;
   letter-spacing: 1px;
-  opacity: 0.45;
-  padding: 0 4px 4px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-dim);
+  padding: 0 4px 5px;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
@@ -58,12 +84,15 @@
 .tower-fila {
   padding: clamp(4px, 0.7vh, 9px) 4px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-elev-2);
   font-size: clamp(11px, 1.4vh, 16px);
+  animation: aparecer 0.3s ease both;
 }
 
+/* El líder se marca con el rojo F1 al borde, no con un fondo más claro: el fondo compite
+   con los colores de equipo, que son la identidad. */
 .tower-fila.is-lider {
-  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 2px 0 0 var(--rojo-f1);
 }
 
 .tower-fila.is-dnf {
@@ -116,11 +145,20 @@
   font-size: 0.9em;
 }
 
-/* LÍDER/DNF no tienen número: ocupan las dos columnas numéricas. */
+/* Al rotar de modo el número cambia de significado, no sólo de valor: la animación avisa
+   que ya no estás mirando lo mismo. */
+.tower-col-num {
+  animation: rotar-modo 0.3s ease both;
+}
+
+@keyframes rotar-modo {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .tower-col-rol {
-  grid-column: 3 / span 2;
   font-weight: bold;
   letter-spacing: 1px;
-  opacity: 0.65;
+  color: var(--text-dim);
   font-size: 0.8em;
 }
