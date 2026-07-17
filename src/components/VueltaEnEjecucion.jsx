@@ -24,6 +24,22 @@ function ordenSector(sectorId) {
   return Number(sectorId.replace('sector_', ''))
 }
 
+/** sector_0 es el primer sector: para el público es "S1". */
+function nombreSector(sectorId) {
+  return `S${ordenSector(sectorId) + 1}`
+}
+
+/** Mejor tiempo por sector sobre un conjunto de vueltas cerradas. */
+function mejoresDeVueltas(laps) {
+  const mapa = {}
+  for (const lap of laps || []) {
+    for (const [sectorId, st] of Object.entries(lap.sectorTimes || {})) {
+      acumularMejor(mapa, sectorId, st?.tiempoMs)
+    }
+  }
+  return mapa
+}
+
 // Formato F1. Milisegundos siempre a 3 dígitos.
 const ms3 = (ms) => String(ms % 1000).padStart(3, '0')
 
@@ -49,7 +65,11 @@ function formatDelta(deltaMs) {
   return `${signo}${formatSector(Math.abs(deltaMs))}`
 }
 
-export default function VueltaEnEjecucion({ carrito, sesion, sensores }) {
+/**
+ * @param {boolean} compacta Variante "tira" para la TV: el widget del broadcast de F1 es una
+ *   franja horizontal, no una pila de tarjetas. Misma lógica, sólo cambia la forma.
+ */
+export default function VueltaEnEjecucion({ carrito, sesion, sensores, compacta }) {
   const [tiempoActualMs, setTiempoActualMs] = useState(0)
 
   const vaultaAbierta = carrito?.vaultaActualInicio != null
@@ -69,31 +89,34 @@ export default function VueltaEnEjecucion({ carrito, sesion, sensores }) {
     return () => cancelAnimationFrame(raf)
   }, [vaultaAbierta, inicio])
 
-  // Obtener vuelta anterior para comparar
-  const vaultaAnterior = useMemo(() => {
-    if (!carrito?.lapHistory || carrito.lapHistory.length === 0) return null
-    return carrito.lapHistory[carrito.lapHistory.length - 1]
+  // Última vuelta cerrada: se muestra completa en su propia fila.
+  const ultimaVuelta = useMemo(() => {
+    const laps = carrito?.lapHistory || []
+    return laps.length ? laps[laps.length - 1] : null
   }, [carrito?.lapHistory])
 
   // Mejores por sector, incluyendo la vuelta en curso: un sector cuenta apenas se cruza,
   // aunque la vuelta después no cierre. Sin los tiempos vivos, el morado nunca se dispara.
-  // `mejorPersonalPrevio` sale solo de vueltas cerradas: es la referencia del delta, y el
-  // tiempo actual no puede compararse contra sí mismo.
-  const { mejorSesion, mejorPersonal, mejorPersonalPrevio } = useMemo(() => {
+  const { mejorSesion, mejorPersonal } = useMemo(() => {
     const sesionMap = {}
     const personalMap = {}
-    const previoMap = {}
     for (const otro of Object.values(sesion?.carritos || {})) {
       recorrerSectores(otro, (sectorId, t) => acumularMejor(sesionMap, sectorId, t))
     }
     recorrerSectores(carrito, (sectorId, t) => acumularMejor(personalMap, sectorId, t))
-    for (const lap of carrito?.lapHistory || []) {
-      for (const [sectorId, st] of Object.entries(lap.sectorTimes || {})) {
-        acumularMejor(previoMap, sectorId, st?.tiempoMs)
-      }
-    }
-    return { mejorSesion: sesionMap, mejorPersonal: personalMap, mejorPersonalPrevio: previoMap }
+    return { mejorSesion: sesionMap, mejorPersonal: personalMap }
   }, [sesion?.carritos, carrito])
+
+  // Referencias del delta. Cada fila se compara contra su propio pasado, nunca contra sí
+  // misma: la vuelta en curso mira todas las cerradas, y la última cerrada mira las que
+  // vinieron antes que ella. Si no, un récord daría delta 0 contra sí mismo.
+  const { refActual, refUltima } = useMemo(() => {
+    const laps = carrito?.lapHistory || []
+    return {
+      refActual: mejoresDeVueltas(laps),
+      refUltima: mejoresDeVueltas(laps.slice(0, -1)),
+    }
+  }, [carrito?.lapHistory])
 
   // Convención F1: morado = mejor de la sesión, verde = tu récord personal, amarillo = el resto.
   // El propio tiempo está en los pools, así que el mínimo siempre es <=; la igualdad significa
@@ -113,9 +136,9 @@ export default function VueltaEnEjecucion({ carrito, sesion, sensores }) {
   const sectores = useMemo(() => {
     const set = new Set(sectoresEsperados(sensores))
     Object.keys(carrito?.sectorTimesActuales || {}).forEach((s) => set.add(s))
-    Object.keys(vaultaAnterior?.sectorTimes || {}).forEach((s) => set.add(s))
+    Object.keys(ultimaVuelta?.sectorTimes || {}).forEach((s) => set.add(s))
     return Array.from(set).sort((a, b) => ordenSector(a) - ordenSector(b))
-  }, [sensores, carrito?.sectorTimesActuales, vaultaAnterior?.sectorTimes])
+  }, [sensores, carrito?.sectorTimesActuales, ultimaVuelta?.sectorTimes])
 
   if (!vaultaAbierta) {
     return (
@@ -125,31 +148,107 @@ export default function VueltaEnEjecucion({ carrito, sesion, sensores }) {
     )
   }
 
+  // Variante TV: dos tiras horizontales (actual / última) en vez de tarjetas apiladas.
+  if (compacta) {
+    return (
+      <div className="vuelta-en-ejecucion vuelta-en-ejecucion--tira">
+        <TiraVuelta
+          rotulo="ACT"
+          tiempo={formatLap(tiempoActualMs)}
+          vivo
+          sectores={sectores}
+          tiempos={carrito.sectorTimesActuales}
+          color={getColorSector}
+        />
+        {ultimaVuelta && (
+          <TiraVuelta
+            rotulo={`V${ultimaVuelta.vuelta}`}
+            tiempo={formatLap(ultimaVuelta.tiempoMs)}
+            sectores={sectores}
+            tiempos={ultimaVuelta.sectorTimes}
+            color={getColorSector}
+          />
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="vuelta-en-ejecucion">
-      <div className="crono-grande">
-        {formatLap(tiempoActualMs)}
+      <div className="vuelta-bloque">
+        <div className="vuelta-encabezado">
+          <span className="vuelta-rotulo">ACTUAL</span>
+          <span className="crono-grande">{formatLap(tiempoActualMs)}</span>
+        </div>
+        <SectoresGrid
+          sectores={sectores}
+          tiempos={carrito.sectorTimesActuales}
+          referencia={refActual}
+          color={getColorSector}
+        />
       </div>
 
-      <div className="sectores-grid">
-        {sectores.map((sectorId) => {
-          const tiempoActual = carrito.sectorTimesActuales?.[sectorId]?.tiempoMs
-          const referencia = mejorPersonalPrevio[sectorId]
-          const delta = tiempoActual != null && referencia != null ? tiempoActual - referencia : null
+      {/* El último sector lo cierra la meta, así que nace y muere en el mismo instante y
+          nunca llega a verse en la fila de arriba. Acá sí queda visible toda la vuelta. */}
+      {ultimaVuelta && (
+        <div className="vuelta-bloque vuelta-bloque--ultima">
+          <div className="vuelta-encabezado">
+            <span className="vuelta-rotulo">ÚLTIMA · V{ultimaVuelta.vuelta}</span>
+            <span className="crono-ultima">{formatLap(ultimaVuelta.tiempoMs)}</span>
+          </div>
+          <SectoresGrid
+            sectores={sectores}
+            tiempos={ultimaVuelta.sectorTimes}
+            referencia={refUltima}
+            color={getColorSector}
+            compacta
+          />
+        </div>
+      )}
+    </div>
+  )
+}
 
+/**
+ * Una vuelta como franja horizontal: rótulo · tiempo · tira de sectores.
+ * Los segmentos llevan el mismo código de color que las tarjetas; el delta se omite porque
+ * a este tamaño no se lee y el color ya dice lo mismo.
+ */
+function TiraVuelta({ rotulo, tiempo, vivo, sectores, tiempos, color }) {
+  return (
+    <div className={`tira ${vivo ? 'tira--viva' : ''}`}>
+      <span className="tira-rotulo">{rotulo}</span>
+      <span className="tira-tiempo">{tiempo}</span>
+      <div className="tira-segs">
+        {sectores.map((sectorId) => {
+          const t = tiempos?.[sectorId]?.tiempoMs
           return (
-            <div key={sectorId} className={`sector-card ${getColorSector(sectorId, tiempoActual)}`}>
-              <div className="sector-nombre">{sectorId.replace('sector_', 'S')}</div>
-              <div className="sector-tiempo">{formatSector(tiempoActual)}</div>
-              {delta != null && (
-                <div className={`sector-delta ${delta < 0 ? 'delta-mejor' : 'delta-peor'}`}>
-                  {formatDelta(delta)}
-                </div>
-              )}
-            </div>
+            <span key={sectorId} className={`tira-seg ${color(sectorId, t)}`} title={nombreSector(sectorId)}>
+              <b>{nombreSector(sectorId)}</b>
+              <i>{formatSector(t)}</i>
+            </span>
           )
         })}
       </div>
+    </div>
+  )
+}
+
+function SectoresGrid({ sectores, tiempos, referencia, color, compacta }) {
+  return (
+    <div className={`sectores-grid ${compacta ? 'sectores-grid--compacta' : ''}`}>
+      {sectores.map((sectorId) => {
+        const t = tiempos?.[sectorId]?.tiempoMs
+        const ref = referencia[sectorId]
+        const delta = t != null && ref != null ? t - ref : null
+        return (
+          <div key={sectorId} className={`sector-card ${color(sectorId, t)}`}>
+            <div className="sector-nombre">{nombreSector(sectorId)}</div>
+            <div className="sector-tiempo">{formatSector(t)}</div>
+            {delta != null && <div className="sector-delta">{formatDelta(delta)}</div>}
+          </div>
+        )
+      })}
     </div>
   )
 }

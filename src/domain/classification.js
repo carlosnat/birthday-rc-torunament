@@ -15,7 +15,7 @@ import { puntosPorPosicion } from './scoring.js'
  * @param {object} carritosMap { eqId: carrito }
  * @param {string} tipoSesion TIPO_SESION.*
  * @param {number[]} puntuacion tabla de puntos
- * @returns {Array} [{ posicion, eqId, vueltas, ultimaVuelta, mejorVuelta, tsFinal, estado, puntos }]
+ * @returns {Array} [{ posicion, eqId, vueltas, ultimaVuelta, mejorVuelta, ultimaPasada, tsFinal, estado, puntos }]
  */
 export function clasificar(carritosMap, tipoSesion, puntuacion) {
   const entradas = Object.entries(carritosMap || {}).map(([eqId, c]) => ({
@@ -43,6 +43,9 @@ export function clasificar(carritosMap, tipoSesion, puntuacion) {
       vueltas: c.vueltas,
       ultimaVuelta: c.ultimaVuelta ?? null,
       mejorVuelta: c.mejorVuelta ?? null,
+      // Se expone porque es lo que permite calcular gaps en vivo: dos autos en la misma
+      // vuelta están separados por la diferencia entre sus cruces de meta.
+      ultimaPasada: c.ultimaPasada ?? null,
       tsFinal: c.tsFinal ?? null,
       estado: c.estado,
       puntos: esCarrera ? puntosPorPosicion(posicion, puntuacion) : 0,

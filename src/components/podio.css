@@ -1,0 +1,70 @@
+/* src/components/podio.css — podio de la sesión / campeonato.
+   Vivían en publico.css; se mudaron acá para que el componente sea autocontenido. */
+
+.podio {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(6px, 2vw, 28px);
+  max-width: 100%;
+  min-height: 0;
+}
+
+.podio-caja {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1vh;
+  width: clamp(70px, 12vw, 160px);
+  min-width: 0;
+}
+
+.podio-caja.vacia {
+  visibility: hidden;
+}
+
+.podio-carro {
+  width: clamp(34px, 6vw, 80px);
+  height: clamp(10px, 3vh, 22px);
+  border-radius: 6px;
+}
+
+.podio-nombre {
+  font-weight: 700;
+  font-size: clamp(10px, 1.4vw, 18px);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.podio-bloque {
+  width: 100%;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5vh;
+}
+
+.podio-caja.oro .podio-bloque {
+  border-color: #ffd60a;
+  box-shadow: 0 0 30px rgba(255, 214, 10, 0.4);
+}
+
+.podio-caja.plata .podio-bloque { border-color: #c0c0c0; }
+.podio-caja.bronce .podio-bloque { border-color: #cd7f32; }
+
+.podio-pos {
+  font-size: clamp(16px, 3vw, 42px);
+  font-weight: 700;
+}
+
+.podio-pts {
+  color: var(--text-dim);
+  font-size: clamp(9px, 1.2vw, 15px);
+}

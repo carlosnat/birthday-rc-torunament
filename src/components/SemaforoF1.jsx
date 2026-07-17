@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { SESION } from '../domain/constants.js'
 import { beepLuz, beepVerde } from '../utils/audio.js'
+import './semaforo.css'
 
 const COLUMNAS = [0, 1, 2, 3, 4]
 
@@ -55,3 +56,4 @@ export default function SemaforoF1({ estado, sonido }) {
     </div>
   )
 }
+

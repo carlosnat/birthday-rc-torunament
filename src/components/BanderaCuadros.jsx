@@ -1,5 +1,6 @@
 // src/components/BanderaCuadros.jsx
 // Bandera a cuadros animada para el final de carrera.
+import './bandera.css'
 
 export default function BanderaCuadros({ texto = 'BANDERA A CUADROS' }) {
   return (
@@ -9,3 +10,4 @@ export default function BanderaCuadros({ texto = 'BANDERA A CUADROS' }) {
     </div>
   )
 }
+

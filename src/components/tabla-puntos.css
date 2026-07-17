@@ -1,0 +1,46 @@
+/* src/components/tabla-puntos.css — tabla de puntos del campeonato.
+   Vivían en publico.css; se mudaron acá para que el componente sea autocontenido. */
+
+.puntos {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: clamp(6px, 1.6vh, 16px) clamp(8px, 1.6vw, 18px);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.puntos-titulo {
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  margin-bottom: 1vh;
+  font-size: clamp(9px, 1.4vw, 16px);
+}
+
+.puntos-row {
+  display: grid;
+  grid-template-columns: 2.5ch 0.8ch minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(4px, 1vw, 12px);
+  padding: 0.6vh 0;
+  border-bottom: 1px solid var(--border);
+  font-size: clamp(10px, 1.5vw, 18px);
+}
+
+.puntos-pos {
+  font-weight: 700;
+  text-align: center;
+}
+
+.puntos-nombre {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.puntos-val {
+  font-weight: 700;
+  color: var(--amarillo);
+  font-size: clamp(12px, 1.8vw, 22px);
+}

@@ -1,0 +1,126 @@
+/* Torre de tiempos F1. Cuatro columnas: posición, equipo, interval, gap.
+   Todo en unidades relativas: la torre ocupa la altura que le da su celda del grid y
+   scrollea internamente si hay más autos de los que entran, sin empujar la página. */
+
+.tower {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+  padding: clamp(6px, 0.8vh, 12px);
+  box-sizing: border-box;
+}
+
+.tower-titulo {
+  font-size: clamp(10px, 1.1vh, 13px);
+  font-weight: bold;
+  letter-spacing: 2px;
+  opacity: 0.7;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.tower-vacio {
+  opacity: 0.5;
+  font-size: clamp(11px, 1.2vh, 14px);
+}
+
+/* Encabezado y filas comparten la grilla, así las columnas quedan alineadas. */
+.tower-encabezado,
+.tower-fila {
+  display: grid;
+  grid-template-columns: 2ch minmax(0, 1fr) 7ch 7ch;
+  align-items: center;
+  gap: clamp(4px, 0.6vw, 10px);
+}
+
+.tower-encabezado {
+  font-size: clamp(8px, 0.9vh, 10px);
+  font-weight: bold;
+  letter-spacing: 1px;
+  opacity: 0.45;
+  padding: 0 4px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
+.tower-filas {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  min-height: 0;
+  margin-top: 4px;
+}
+
+.tower-fila {
+  padding: clamp(4px, 0.7vh, 9px) 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: clamp(11px, 1.4vh, 16px);
+}
+
+.tower-fila.is-lider {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.tower-fila.is-dnf {
+  opacity: 0.45;
+}
+
+.tower-col-pos {
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.tower-col-eq {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Barra de color del equipo: es la identidad, igual que el casco en F1. */
+.tower-color {
+  width: 4px;
+  height: 1.4em;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.tower-nombre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+/* Punto morado = vuelta rápida de la sesión, mismo código que los sectores. */
+.tower-fastest {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #9c27b0;
+  flex-shrink: 0;
+}
+
+.tower-col-num,
+.tower-col-rol {
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-size: 0.9em;
+}
+
+/* LÍDER/DNF no tienen número: ocupan las dos columnas numéricas. */
+.tower-col-rol {
+  grid-column: 3 / span 2;
+  font-weight: bold;
+  letter-spacing: 1px;
+  opacity: 0.65;
+  font-size: 0.8em;
+}

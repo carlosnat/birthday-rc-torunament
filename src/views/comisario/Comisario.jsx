@@ -335,25 +335,7 @@ function LogEventos() {
 
   return (
     <div className="panel">
-      <h2>SENSORES Y DETECCIONES</h2>
-
-      {/* Panel de sensores registrados */}
-      <div style={{ marginBottom: 16, padding: 8, background: '#f5f5f5', borderRadius: 4 }}>
-        <div className="text-dim" style={{ marginBottom: 6 }}>SENSORES REGISTRADOS ({sensores.length})</div>
-        {sensores.length === 0 ? (
-          <span className="text-dim">NINGUNO</span>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8 }}>
-            {sensores.map(s => (
-              <div key={s.id} style={{ fontSize: '12px', padding: '6px 8px', background: '#fff', borderRadius: 3, border: '1px solid #ddd' }}>
-                <div><b>{s.nombre}</b> (orden {s.orden})</div>
-                <div className="text-dim" style={{ wordBreak: 'break-all', fontSize: '10px' }}>{s.id}</div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
+  
       <div style={{ marginBottom: 8 }}>
         <label style={{ cursor: 'pointer' }}>
           <input type="checkbox" checked={filtroSensores} onChange={(e) => setFiltroSensores(e.target.checked)} />

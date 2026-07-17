@@ -16,16 +16,39 @@ function enRegistro(torneo) {
   return torneo?.estado === TORNEO.REGISTRO
 }
 
-/** Crea un equipo nuevo con su color (identidad) y su primer participante. */
-export async function crearEquipo(torneo, { nombre, colorId, participante, avatarId }) {
+function validarEquipoNuevo(torneo, { nombre, colorId }) {
   if (!enRegistro(torneo)) return { ok: false, motivo: 'REGISTRO_CERRADO' }
-  if (!nombre?.trim() || !participante?.trim()) return { ok: false, motivo: 'DATOS_INCOMPLETOS' }
+  if (!nombre?.trim()) return { ok: false, motivo: 'DATOS_INCOMPLETOS' }
   if (!getColor(colorId)) return { ok: false, motivo: 'COLOR_INVALIDO' }
-
-  const avatarValido = getAvatar(avatarId) ? avatarId : DEFAULT_AVATAR_ID
 
   const libres = coloresDisponibles(torneo.equipos).map((c) => c.id)
   if (!libres.includes(colorId)) return { ok: false, motivo: 'COLOR_TOMADO' }
+
+  return { ok: true }
+}
+
+/** Crea un equipo nuevo con su color (identidad), sin participantes iniciales. */
+export async function crearEquipoBase(torneo, { nombre, colorId }) {
+  const validacion = validarEquipoNuevo(torneo, { nombre, colorId })
+  if (!validacion.ok) return validacion
+
+  const equipo = {
+    nombre: nombre.trim().toUpperCase(),
+    color: colorId,
+    participantes: [],
+  }
+  const refEq = await pushPath(P.equipos(T), equipo)
+  await logEvento(T, 'EQUIPO_CREADO', { equipo: refEq.key, nombre: equipo.nombre, color: colorId })
+  return { ok: true, eqId: refEq.key }
+}
+
+/** Crea un equipo nuevo con su color (identidad) y su primer participante. */
+export async function crearEquipo(torneo, { nombre, colorId, participante, avatarId }) {
+  const validacion = validarEquipoNuevo(torneo, { nombre, colorId })
+  if (!validacion.ok) return validacion
+  if (!participante?.trim()) return { ok: false, motivo: 'DATOS_INCOMPLETOS' }
+
+  const avatarValido = getAvatar(avatarId) ? avatarId : DEFAULT_AVATAR_ID
 
   const equipo = {
     nombre: nombre.trim().toUpperCase(),
@@ -42,7 +65,7 @@ export async function unirseEquipo(torneo, eqId, participante, avatarId) {
   if (!enRegistro(torneo)) return { ok: false, motivo: 'REGISTRO_CERRADO' }
   if (!participante?.trim()) return { ok: false, motivo: 'DATOS_INCOMPLETOS' }
 
-  const eq = torneo.equipos?.[eqId]
+  const eq = torneo.equipos?.[eqId] || (await readPath(P.equipo(T, eqId)))
   if (!eq) return { ok: false, motivo: 'EQUIPO_INEXISTENTE' }
 
   const avatarValido = getAvatar(avatarId) ? avatarId : DEFAULT_AVATAR_ID

@@ -1,0 +1,80 @@
+/* Listado de inscriptos (equipos + sensores) para la fase de REGISTRO.
+   Comparte la celda 1/4 con la torre de tiempos, así que respeta las mismas reglas:
+   altura completa, min-height 0 y scroll interno en vez de empujar el layout. */
+
+.lateral {
+  display: grid;
+  grid-template-rows: minmax(0, 2fr) minmax(0, 1fr);
+  gap: clamp(4px, 0.8vh, 10px);
+  min-height: 0;
+  height: 100%;
+}
+
+.lateral-bloque {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: clamp(5px, 0.8vh, 12px);
+  box-sizing: border-box;
+}
+
+.lateral-titulo {
+  font-size: clamp(9px, 1.1vh, 12px);
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.lateral-filas {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.lateral-vacio {
+  font-size: clamp(9px, 1.1vh, 12px);
+  color: var(--text-dim);
+  opacity: 0.7;
+}
+
+.lateral-equipo,
+.lateral-sensor {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: clamp(3px, 0.6vh, 7px) 4px;
+  border-radius: 4px;
+  background: var(--bg-elev-2);
+  font-size: clamp(10px, 1.3vh, 14px);
+  min-width: 0;
+  animation: aparecer 0.3s ease both;
+}
+
+.lateral-color {
+  width: 4px;
+  height: 1.4em;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.lateral-nombre {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.lateral-int {
+  color: var(--text-dim);
+  font-size: 0.85em;
+  flex-shrink: 0;
+}

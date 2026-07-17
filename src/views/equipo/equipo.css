@@ -3,15 +3,24 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
-  width: min(100%, 480px);
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
-  min-height: calc(100dvh - (var(--sp-3) * 2));
+  min-height: 100%;
+  max-height: 100dvh;
   overflow: hidden;
   margin: 0 auto;
   --eq-color: var(--text);
 }
 .eq.stack { gap: var(--sp-2); }
 .eq h1 { font-size: clamp(18px, 4vw, 20px); letter-spacing: 1px; }
+
+.eq-registro {
+  overflow-y: auto;
+  padding-top: max(var(--sp-2), env(safe-area-inset-top));
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  scroll-padding-top: calc(var(--sp-2) + env(safe-area-inset-top));
+}
 
 .eq .row {
   gap: var(--sp-1);
@@ -63,7 +72,45 @@
 .avatar-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(56px, 1fr));
-  gap: 8px;
+  gap: 6px;
+}
+
+.avatar-grid-scroll {
+  max-height: min(40dvh, 340px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+.avatar-grid-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.avatar-grid-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+
+.eq-fixed-cta-spacer {
+  height: calc(72px + env(safe-area-inset-bottom));
+}
+
+.eq-fixed-cta {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  pointer-events: none;
+  padding: var(--sp-2) var(--sp-3) calc(var(--sp-2) + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgb(10 10 10 / 0%) 0%, rgb(10 10 10 / 96%) 35%);
+}
+
+.eq-fixed-cta-btn {
+  display: block;
+  width: min(100%, 520px);
+  margin: 0 auto;
+  pointer-events: auto;
 }
 
 .avatar-option {
@@ -76,6 +123,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
+  line-height: 0;
+}
+
+.avatar-option-sprite {
+  width: 100% !important;
+  height: 100% !important;
+  border: 0;
+  border-radius: 10px;
 }
 
 .avatar-option:hover { border-color: var(--text-dim); }
@@ -280,9 +336,96 @@
 }
 .eq-espera { text-align: center; }
 
+.eq-setup-hint {
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.eq-wizard {
+  position: relative;
+  padding: var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev-2);
+}
+
+.eq-wizard-track {
+  height: 4px;
+  background: rgb(255 255 255 / 10%);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: var(--sp-2);
+}
+
+.eq-wizard-progress {
+  height: 100%;
+  background: linear-gradient(90deg, var(--amarillo), var(--rojo-f1));
+  transition: width 240ms ease;
+}
+
+.eq-wizard-steps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-1);
+}
+
+.eq-wizard-step {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px dashed transparent;
+  color: var(--text-dim);
+}
+
+.eq-wizard-badge {
+  width: fit-content;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.eq-wizard-title {
+  font-size: 11px;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.eq-wizard-step.is-active {
+  color: var(--text);
+  border-color: var(--rojo-f1);
+  background: rgb(225 6 0 / 8%);
+}
+
+.eq-wizard-step.is-active .eq-wizard-badge {
+  border-color: var(--rojo-f1);
+  color: var(--text);
+}
+
+.eq-wizard-step.is-done {
+  color: #b5ffcc;
+  border-color: rgb(0 210 106 / 55%);
+  background: rgb(0 210 106 / 10%);
+}
+
+.eq-wizard-step.is-done .eq-wizard-badge {
+  border-color: var(--verde);
+  color: #b5ffcc;
+}
+
 @media (max-width: 600px) {
   .eq {
-    min-height: calc(100dvh - (var(--sp-2) * 2));
+    max-height: 100dvh;
+  }
+
+  .eq-registro {
+    padding-top: max(var(--sp-1), env(safe-area-inset-top));
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
   }
 
   .eq-pos-box,
@@ -296,7 +439,15 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .avatar-grid-scroll {
+    max-height: min(44dvh, 360px);
+  }
+
   .eq-laps-list {
     max-height: 180px;
+  }
+
+  .eq-wizard-title {
+    font-size: 10px;
   }
 }

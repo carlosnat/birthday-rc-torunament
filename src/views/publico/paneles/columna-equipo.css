@@ -1,0 +1,94 @@
+/* Franja fina al pie, no columna alta: las filas se miden por contenido. La altura la fija
+   lo que hay adentro (2 tiras de ~24px), no una fracción del viewport. */
+.col-eq {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 5px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--eq-color, var(--border));
+  border-radius: 8px;
+  padding: clamp(4px, 0.7vh, 9px) clamp(5px, 0.8vw, 10px);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.col-eq-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+}
+
+.col-eq-nombre {
+  font-weight: 700;
+  font-size: clamp(10px, 1.7vh, 17px);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.col-eq-vueltas {
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(9px, 1.3vh, 13px);
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.col-eq-cuerpo {
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+}
+
+/* Un equipo que no corre no merece alto: una línea alcanza. */
+.col-eq-inactivo {
+  padding: 4px 0;
+  font-size: clamp(9px, 1.3vh, 13px);
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  opacity: 0.5;
+}
+
+/* Tope de alto: la fila 3 se mide por contenido, así que sin esto un equipo con muchos
+   integrantes volvería a empujar el layout. Con más, scrollea adentro. */
+.col-eq-gente {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  min-height: 0;
+  max-height: 22dvh;
+  align-content: start;
+}
+
+.col-eq-persona {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: clamp(10px, 1.3vh, 14px);
+  animation: aparecer 0.3s ease both;
+}
+
+.col-eq-persona-nombre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* La vuelta en vivo entra en una columna angosta: sin márgenes ni fondo propio. */
+.col-eq .vuelta-en-ejecucion {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  min-height: 0;
+  overflow: hidden;
+}

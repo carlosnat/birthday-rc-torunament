@@ -14,10 +14,112 @@
   }
 }
 
+/* ---- Variante tira (TV) -------------------------------------------------
+   El widget del broadcast de F1 es una franja horizontal: rótulo, tiempo y una tira de
+   segmentos de color. Ocupa ~1/4 del alto que la variante de tarjetas. */
+
+.vuelta-en-ejecucion--tira {
+  gap: 4px;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+}
+
+.tira {
+  display: grid;
+  grid-template-columns: 3.5ch auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tira-rotulo {
+  font-size: clamp(8px, 1vh, 10px);
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+
+.tira-tiempo {
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: clamp(11px, 1.6vh, 17px);
+}
+
+/* La vuelta en curso es la protagonista: su tiempo va más grande. */
+.tira--viva .tira-tiempo {
+  font-size: clamp(14px, 2.2vh, 24px);
+}
+
+.tira-segs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 3px;
+  min-width: 0;
+}
+
+/* Segmento de sector: alto fijo y chico. Hereda el color de .sector-verde/amarillo/morado. */
+.tira-seg {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tira-seg b {
+  font-size: clamp(7px, 0.9vh, 9px);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.tira-seg i {
+  font-style: normal;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(8px, 1.1vh, 12px);
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vuelta-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* La última vuelta es referencia, no protagonista. La jerarquía la dan el separador y el
+   tamaño compacto de su grilla: un opacity acá compondría también los bloques sólidos contra
+   el panel y bajaría el verde a 3.9:1. */
+.vuelta-bloque--ultima {
+  padding-top: 10px;
+  border-top: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.vuelta-encabezado {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.vuelta-rotulo {
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  opacity: 0.6;
+  white-space: nowrap;
+}
+
 .crono-grande {
   font-size: clamp(32px, 10vw, 48px);
   font-weight: bold;
-  text-align: center;
   font-family: 'Monaco', 'Courier New', monospace;
   /* Milésimas corriendo por frame: sin ancho fijo por dígito el número tiembla. */
   font-variant-numeric: tabular-nums;
@@ -25,8 +127,18 @@
   color: #0a0a0a;
 }
 
+.crono-ultima {
+  font-size: clamp(18px, 5vw, 24px);
+  font-weight: bold;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1px;
+  color: #0a0a0a;
+}
+
 @media (prefers-color-scheme: dark) {
-  .crono-grande {
+  .crono-grande,
+  .crono-ultima {
     color: #fff;
   }
 }
@@ -37,6 +149,24 @@
   gap: 8px;
 }
 
+/* Misma grilla, menos peso: la fila de abajo no compite con la vuelta en curso. */
+.sectores-grid--compacta {
+  gap: 6px;
+}
+
+.sectores-grid--compacta .sector-card {
+  padding: 6px;
+}
+
+.sectores-grid--compacta .sector-tiempo {
+  font-size: clamp(14px, 4vw, 17px);
+  margin: 4px 0;
+}
+
+.sectores-grid--compacta .sector-nombre {
+  font-size: 10px;
+}
+
 .sector-card {
   padding: 10px;
   border-radius: 6px;
@@ -45,70 +175,63 @@
   border: 2px solid transparent;
 }
 
-.sector-card.sector-vacio {
+/* Paleta broadcast F1: bloques sólidos, idénticos en claro y oscuro. Un tiempo morado es
+   morado sin importar el tema, así que estos tres no llevan override de prefers-color-scheme.
+   El texto lo manda el contraste, no la estética: verde y morado son oscuros y sostienen
+   blanco; el amarillo es luminoso y sólo sostiene negro.
+
+   Van sin prefijo de contenedor a propósito: las usan tanto las tarjetas (.sector-card) como
+   los segmentos de la tira (.tira-seg). Atarlas a .sector-card obligaría a duplicarlas. */
+
+.sector-vacio {
   background: #e0e0e0;
   color: #666;
 }
 
 @media (prefers-color-scheme: dark) {
-  .sector-card.sector-vacio {
+  .sector-vacio {
     background: #333;
     color: #999;
   }
 }
 
-/* Verde: mejoró */
-.sector-card.sector-verde {
-  background: #c8e6c9;
-  border-color: #43a047;
-  color: #1b5e20;
+/* Verde: superó su mejor personal.
+   El verde es intrínsecamente luminoso: los vívidos (#00c853 -> 2.24:1) no sostienen texto
+   blanco. Este es el más verde que pasa AA. */
+.sector-verde {
+  background: #2e7d32;
+  border-color: #1b5e20;
+  color: #fff;
 }
 
-@media (prefers-color-scheme: dark) {
-  .sector-card.sector-verde {
-    background: #1b5e20;
-    color: #a5d6a7;
-    border-color: #43a047;
-  }
+/* Amarillo: no superó su mejor.
+   Un amarillo oscuro deja de ser amarillo (se vuelve oliva), así que acá el texto va casi
+   negro en vez de blanco. */
+.sector-amarillo {
+  background: #ffd400;
+  border-color: #b39700;
+  color: #1a1400;
 }
 
-/* Amarillo: empeoró */
-.sector-card.sector-amarillo {
-  background: #fff9c4;
-  border-color: #fbc02d;
-  color: #f57f17;
-}
-
-@media (prefers-color-scheme: dark) {
-  .sector-card.sector-amarillo {
-    background: #f57f17;
-    color: #fff9c4;
-    border-color: #fbc02d;
-  }
-}
-
-/* Morado: mejor de sesión */
-.sector-card.sector-morado {
-  background: #e1bee7;
-  border-color: #8e24aa;
-  color: #4a148c;
+/* Morado: mejor de la sesión. */
+.sector-morado {
+  background: #9c27b0;
+  border-color: #6a1b9a;
+  color: #fff;
   font-weight: bold;
-  box-shadow: 0 0 12px rgba(142, 36, 170, 0.4);
 }
 
-@media (prefers-color-scheme: dark) {
-  .sector-card.sector-morado {
-    background: #4a148c;
-    color: #e1bee7;
-    border-color: #8e24aa;
-    box-shadow: 0 0 12px rgba(142, 36, 170, 0.6);
-  }
+/* El glow es la celebración del morado, pero sólo en la tarjeta: en la tira los segmentos
+   están pegados y el resplandor se derrama sobre los vecinos. */
+.sector-card.sector-morado {
+  box-shadow: 0 0 12px rgba(156, 39, 176, 0.5);
 }
 
+/* Sin opacity: sobre los bloques sólidos, atenuar el texto lo baja de AA (en verde, 0.7 da
+   3.4:1). La jerarquía la da el tamaño, no la transparencia. */
 .sector-nombre {
   font-size: 12px;
   font-weight: bold;
-  opacity: 0.7;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -122,28 +245,12 @@
   margin: 8px 0;
 }
 
+/* Hereda el color de la tarjeta. El signo ya dice si mejoraste; el fondo, contra quién.
+   Darle color propio sería redundante y arruinaría el contraste que la tarjeta ya resolvió. */
 .sector-delta {
   font-size: 12px;
   font-weight: bold;
   font-family: 'Monaco', 'Courier New', monospace;
   font-variant-numeric: tabular-nums;
-  opacity: 0.9;
   margin-top: 4px;
-}
-
-/* El delta va contra tu mejor personal, igual que el color de la tarjeta: si el sector es
-   verde o morado el delta es negativo, si es amarillo es positivo. Nunca se contradicen. */
-.sector-delta.delta-mejor { color: #1b5e20; }
-.sector-delta.delta-peor { color: #b26500; }
-
-@media (prefers-color-scheme: dark) {
-  .sector-delta.delta-mejor { color: #a5d6a7; }
-  .sector-delta.delta-peor { color: #ffcc80; }
-}
-
-/* Dentro de una tarjeta ya coloreada, el contraste lo da el peso, no otro color. */
-.sector-card.sector-verde .sector-delta,
-.sector-card.sector-morado .sector-delta,
-.sector-card.sector-amarillo .sector-delta {
-  color: inherit;
 }

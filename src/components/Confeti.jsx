@@ -2,6 +2,7 @@
 // Confeti liviano en canvas (sin dependencias). Se activa con `active`.
 
 import { useEffect, useRef } from 'react'
+import './confeti.css'
 
 const COLORES = ['#eaff00', '#ff6a00', '#00b7ff', '#7cff2a', '#e10600', '#ffffff']
 
@@ -62,3 +63,4 @@ export default function Confeti({ active }) {
   if (!active) return null
   return <canvas ref={canvasRef} className="confeti-canvas" />
 }
+

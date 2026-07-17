@@ -4,6 +4,7 @@
 import { getColor } from '../domain/colors.js'
 import ColorBadge from './ColorBadge.jsx'
 import { avatarDeEquipo } from '../domain/participants.js'
+import './tabla-puntos.css'
 
 export default function TablaPuntos({ standings, equipos, pilotosSesion }) {
   return (
@@ -25,3 +26,4 @@ export default function TablaPuntos({ standings, equipos, pilotosSesion }) {
     </div>
   )
 }
+

@@ -3,10 +3,11 @@
 
 import { useEffect, useState } from 'react'
 import ColorBadge from '../../components/ColorBadge.jsx'
-import AvatarSprite from '../../components/AvatarSprite.jsx'
 import { coloresDisponibles } from '../../domain/colors.js'
 import { avatarsDisponibles, DEFAULT_AVATAR_ID } from '../../domain/avatars.js'
 import { avatarDeEquipo } from '../../domain/participants.js'
+import CrearEquipoPaso from './components/CrearEquipoPaso.jsx'
+import DatosIntegrantePaso from './components/DatosIntegrantePaso.jsx'
 import * as R from '../../firebase/registroActions.js'
 import './equipo.css'
 
@@ -20,7 +21,11 @@ export default function RegistroEquipo({ torneo, onListo }) {
   const [miNombre, setMiNombre] = useState('')
   const [avatarId, setAvatarId] = useState(DEFAULT_AVATAR_ID)
   const [eqId, setEqId] = useState(equipos[0]?.[0] || '')
+  const [eqCreadoId, setEqCreadoId] = useState(null)
+  const [creandoPaso, setCreandoPaso] = useState('equipo')
+  const [loadingAccion, setLoadingAccion] = useState(false)
   const [msg, setMsg] = useState(null)
+  const pasoActual = creandoPaso === 'equipo' ? 1 : 2
 
   useEffect(() => {
     if (!colorId && disponibles[0]?.id) setColorId(disponibles[0].id)
@@ -28,18 +33,44 @@ export default function RegistroEquipo({ torneo, onListo }) {
     if (!eqId && equipos[0]?.[0]) setEqId(equipos[0][0])
   }, [disponibles, equipos, colorId, avatarId, eqId, listaAvatares])
 
-  async function crear() {
-    const res = await R.crearEquipo(torneo, { nombre: nombreEquipo, colorId, participante: miNombre, avatarId })
-    setMsg(res.ok ? { ok: true, txt: '¡EQUIPO CREADO! YA PODÉS ENTRAR.' } : { ok: false, txt: res.motivo })
+  function resetFlujoCrear() {
+    setEqCreadoId(null)
+    setCreandoPaso('equipo')
+    setNombreEquipo('')
+    setMiNombre('')
+    setAvatarId(DEFAULT_AVATAR_ID)
+  }
+
+  async function crearEquipoBase() {
+    setLoadingAccion(true)
+    const res = await R.crearEquipoBase(torneo, { nombre: nombreEquipo, colorId })
+    setLoadingAccion(false)
+
+    setMsg(res.ok ? { ok: true, txt: 'EQUIPO CREADO. AHORA CARGA TU PERFIL.' } : { ok: false, txt: res.motivo })
     if (res.ok) {
-      setNombreEquipo('')
-      setMiNombre('')
+      setEqCreadoId(res.eqId)
+      setCreandoPaso('integrante')
+    }
+  }
+
+  async function completarCreacion() {
+    if (!eqCreadoId) return
+
+    setLoadingAccion(true)
+    const res = await R.unirseEquipo(torneo, eqCreadoId, miNombre, avatarId)
+    setLoadingAccion(false)
+
+    setMsg(res.ok ? { ok: true, txt: '¡EQUIPO LISTO! YA PODES ENTRAR.' } : { ok: false, txt: res.motivo })
+    if (res.ok) {
       onListo?.(res.eqId)
+      resetFlujoCrear()
     }
   }
 
   async function unirse() {
+    setLoadingAccion(true)
     const res = await R.unirseEquipo(torneo, eqId, miNombre, avatarId)
+    setLoadingAccion(false)
     setMsg(res.ok ? { ok: true, txt: '¡TE UNISTE AL EQUIPO!' } : { ok: false, txt: res.motivo })
     if (res.ok) {
       setMiNombre('')
@@ -48,35 +79,70 @@ export default function RegistroEquipo({ torneo, onListo }) {
   }
 
   return (
-    <div className="app eq stack">
+    <div className="app eq eq-registro stack">
       <h1>REGISTRO DE EQUIPO</h1>
       <div className="row">
-        <button className={`btn btn--ghost ${modo === 'crear' ? 'sel' : ''}`} onClick={() => setModo('crear')}>CREAR EQUIPO</button>
-        <button className={`btn btn--ghost ${modo === 'unirse' ? 'sel' : ''}`} disabled={equipos.length === 0} onClick={() => setModo('unirse')}>UNIRME A UNO</button>
+        <button
+          className={`btn btn--ghost ${modo === 'crear' ? 'sel' : ''}`}
+          onClick={() => {
+            setModo('crear')
+            setMsg(null)
+          }}
+        >
+          CREAR EQUIPO
+        </button>
+        <button
+          className={`btn btn--ghost ${modo === 'unirse' ? 'sel' : ''}`}
+          disabled={equipos.length === 0}
+          onClick={() => {
+            setModo('unirse')
+            setMsg(null)
+            resetFlujoCrear()
+          }}
+        >
+          UNIRME A UNO
+        </button>
       </div>
 
       {modo === 'crear' ? (
         <div className="panel stack">
-          <h2>NUEVO EQUIPO</h2>
-          {disponibles.length === 0 ? (
-            <div className="text-rojo">NO QUEDAN COLORES LIBRES. UNITE A UN EQUIPO EXISTENTE.</div>
+          <WizardCrearEquipo pasoActual={pasoActual} />
+          <h2>{creandoPaso === 'equipo' ? 'PASO 1 · NUEVO EQUIPO' : 'PASO 2 · TU PERFIL'}</h2>
+          {creandoPaso === 'equipo' ? (
+            <CrearEquipoPaso
+              nombreEquipo={nombreEquipo}
+              setNombreEquipo={setNombreEquipo}
+              colorId={colorId}
+              setColorId={setColorId}
+              coloresDisponibles={disponibles}
+              onCrear={crearEquipoBase}
+              loading={loadingAccion}
+            />
           ) : (
             <>
-              <input className="input" placeholder="NOMBRE DEL EQUIPO" value={nombreEquipo} onChange={(e) => setNombreEquipo(e.target.value)} />
+              <div className="eq-setup-hint text-dim">EQUIPO: {nombreEquipo || 'SIN NOMBRE'}</div>
+              <DatosIntegrantePaso
+                miNombre={miNombre}
+                setMiNombre={setMiNombre}
+                avatarId={avatarId}
+                setAvatarId={setAvatarId}
+                listaAvatares={listaAvatares}
+                onConfirmar={completarCreacion}
+                loading={loadingAccion}
+                cta="ENTRAR"
+              />
               <div className="row">
-                {disponibles.map((c) => (
-                  <button
-                    key={c.id}
-                    className={`color-pick ${colorId === c.id ? 'sel' : ''}`}
-                    style={{ background: c.hex }}
-                    onClick={() => setColorId(c.id)}
-                    title={c.nombre}
-                  />
-                ))}
+                <button
+                  className="btn btn--ghost"
+                  type="button"
+                  onClick={() => {
+                    setCreandoPaso('equipo')
+                    setEqCreadoId(null)
+                  }}
+                >
+                  VOLVER
+                </button>
               </div>
-              <AvatarSelector listaAvatares={listaAvatares} avatarId={avatarId} setAvatarId={setAvatarId} />
-              <input className="input" placeholder="TU NOMBRE" value={miNombre} onChange={(e) => setMiNombre(e.target.value)} />
-              <button className="btn btn--primary" disabled={!nombreEquipo || !miNombre || !colorId} onClick={crear}>CREAR</button>
             </>
           )}
         </div>
@@ -91,9 +157,16 @@ export default function RegistroEquipo({ torneo, onListo }) {
               </button>
             ))}
           </div>
-          <AvatarSelector listaAvatares={listaAvatares} avatarId={avatarId} setAvatarId={setAvatarId} />
-          <input className="input" placeholder="TU NOMBRE" value={miNombre} onChange={(e) => setMiNombre(e.target.value)} />
-          <button className="btn btn--primary" disabled={!eqId || !miNombre} onClick={unirse}>UNIRME</button>
+          <DatosIntegrantePaso
+            miNombre={miNombre}
+            setMiNombre={setMiNombre}
+            avatarId={avatarId}
+            setAvatarId={setAvatarId}
+            listaAvatares={listaAvatares}
+            onConfirmar={unirse}
+            loading={loadingAccion}
+            cta="UNIRME"
+          />
         </div>
       )}
 
@@ -102,27 +175,38 @@ export default function RegistroEquipo({ torneo, onListo }) {
   )
 }
 
-function AvatarSelector({ listaAvatares, avatarId, setAvatarId }) {
-  if (!listaAvatares.length) {
-    return <div className="text-rojo">NO HAY AVATARES DISPONIBLES EN assets/images.</div>
-  }
+function WizardCrearEquipo({ pasoActual }) {
+  const progreso = pasoActual === 1 ? '0%' : '100%'
 
   return (
-    <div className="stack" style={{ gap: 8 }}>
-      <div className="text-dim">ELEGÍ TU AVATAR</div>
-      <div className="avatar-grid">
-        {listaAvatares.map((avatar) => (
-          <button
-            key={avatar.id}
-            type="button"
-            className={`avatar-option ${avatarId === avatar.id ? 'selected' : ''}`}
-            onClick={() => setAvatarId(avatar.id)}
-            title={avatar.nombre}
-          >
-            <AvatarSprite avatarId={avatar.id} size={72} alt={avatar.nombre} />
-          </button>
-        ))}
+    <div className="eq-wizard" aria-label="PROGRESO DE REGISTRO">
+      <div className="eq-wizard-track" aria-hidden>
+        <div className="eq-wizard-progress" style={{ width: progreso }} />
       </div>
+
+      <div className="eq-wizard-steps">
+        <StepWizard
+          numero="1"
+          total="2"
+          titulo="CREAR EQUIPO"
+          estado={pasoActual >= 1 ? (pasoActual > 1 ? 'done' : 'active') : 'idle'}
+        />
+        <StepWizard
+          numero="2"
+          total="2"
+          titulo="TU PERFIL"
+          estado={pasoActual >= 2 ? 'active' : 'idle'}
+        />
+      </div>
+    </div>
+  )
+}
+
+function StepWizard({ numero, total, titulo, estado }) {
+  return (
+    <div className={`eq-wizard-step is-${estado}`}>
+      <div className="eq-wizard-badge">{numero}/{total}</div>
+      <div className="eq-wizard-title">{titulo}</div>
     </div>
   )
 }

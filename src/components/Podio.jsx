@@ -4,6 +4,7 @@
 import { getColor } from '../domain/colors.js'
 import ColorBadge from './ColorBadge.jsx'
 import { avatarDeEquipo } from '../domain/participants.js'
+import './podio.css'
 
 function Caja({ r, equipos, alto, clase, pilotosSesion }) {
   if (!r) return <div className="podio-caja vacia" />
@@ -36,3 +37,4 @@ export default function Podio({ orden, equipos, pilotosSesion }) {
     </div>
   )
 }
+

@@ -1,0 +1,96 @@
+.esc {
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: clamp(8px, 2vh, 20px);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: clamp(6px, 1vh, 14px);
+  overflow: hidden;
+}
+
+/* Nada que mostrar mientras se corre: el protagonismo es de la torre y los sectores. */
+.esc--libre {
+  background: rgba(255, 255, 255, 0.015);
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.esc--qr {
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-content: stretch;
+}
+
+/* Nada puede desbordar el escenario: es una celda de alto fijo. */
+.esc > * {
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.esc-campeon {
+  font-size: clamp(14px, 3vh, 34px);
+  font-weight: 700;
+  color: var(--amarillo);
+  text-shadow: 0 0 24px rgba(255, 214, 10, 0.6);
+  text-align: center;
+}
+
+.esc-qr {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  justify-items: center;
+  align-content: center;
+  gap: clamp(4px, 1vh, 10px);
+  min-height: 0;
+}
+
+.esc-qr-titulo {
+  font-size: clamp(9px, 1.4vh, 15px);
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+}
+
+.esc-qr-cta {
+  font-size: clamp(9px, 1.3vh, 14px);
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--verde);
+  text-align: center;
+}
+
+/* QRRegistro trae width/height fijos en el <img>; acá lo obligamos a escalar al alto
+   disponible sin deformarse ni desbordar. */
+.esc-qr-img {
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  width: 100%;
+}
+
+.esc-qr-img .qr {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.esc-qr-img img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+/* La URL bajo el QR es para depurar, no para el público de la TV. */
+.esc-qr-img .qr-url {
+  display: none;
+}

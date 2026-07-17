@@ -1,0 +1,53 @@
+.cab {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: clamp(8px, 2vw, 24px);
+  flex-wrap: wrap;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: clamp(4px, 0.8vh, 10px);
+  min-height: 0;
+}
+
+.cab-titulo {
+  margin: 0;
+  font-size: clamp(15px, 2.8vh, 32px);
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-shadow: 0 0 20px rgba(225, 6, 0, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.cab-meta {
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 1vw, 16px);
+  font-size: clamp(9px, 1.5vh, 15px);
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  flex-wrap: wrap;
+}
+
+.cab-tipo {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cab-vuelta,
+.cab-countdown {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cab-estado {
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.2em 0.9em;
+  font-weight: 700;
+  color: var(--amarillo);
+}
