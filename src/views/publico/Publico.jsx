@@ -23,7 +23,7 @@ import VideoFondo from '../camara/VideoFondo.jsx'
 import { useCamaraViewer } from '../../webrtc/useCamaraViewer.js'
 import { clasificar, vueltaRapida } from '../../domain/classification.js'
 import { puntosAcumulados, calcularIntervalos } from '../../domain/standings.js'
-import { TORNEO, SESION } from '../../domain/constants.js'
+import { TORNEO, SESION, ordenaPorMejorVuelta } from '../../domain/constants.js'
 import { unlockAudio } from '../../utils/audio.js'
 import './publico.css'
 
@@ -42,7 +42,8 @@ export default function Publico() {
   const equipos = torneo.equipos || {}
   const sesion = torneo.sesionActiva ? torneo.sesiones?.[torneo.sesionActiva] : null
   const orden = sesion ? clasificar(sesion.carritos, sesion.tipo, torneo.config.puntuacion) : []
-  const intervalos = calcularIntervalos(orden)
+  // En qualy/time attack el gap es diferencia de mejor vuelta, no de cruces de meta.
+  const intervalos = calcularIntervalos(orden, ordenaPorMejorVuelta(sesion?.tipo))
   const vr = sesion ? vueltaRapida(sesion.carritos) : null
   const standings = puntosAcumulados(torneo)
   const festejo = torneo.estado === TORNEO.FINALIZADO || sesion?.estado === SESION.FINALIZADA

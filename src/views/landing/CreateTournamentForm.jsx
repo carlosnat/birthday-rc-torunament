@@ -3,13 +3,14 @@
 
 import { useState } from 'react'
 import { DEFAULT_CONFIG } from '../../firebase/seed.js'
-import { TIPO_SESION } from '../../domain/constants.js'
+import { TIPO_SESION, MODALIDAD } from '../../domain/constants.js'
 import { nuevoTorneoId } from '../../currentTorneo.js'
 
 const DEFAULT_RACE_LAPS = 3
 const DEFAULT_TIME_MIN = 3000
 const DEFAULT_PRACTICA_DURATION_MS = 5 * 60 * 1000
 const DEFAULT_QUALY_DURATION_MS = 3 * 60 * 1000
+const DEFAULT_TIMEATTACK_DURATION_MS = 5 * 60 * 1000
 
 function descomponerDuracion(ms, fallbackMs) {
   const totalSegundos = Math.max(0, Math.floor((Number(ms) || fallbackMs) / 1000))
@@ -34,6 +35,7 @@ function duracionDesdeCampos(min, sec, fallbackMs) {
 function nuevoCircuito(index) {
   const practica = descomponerDuracion(DEFAULT_PRACTICA_DURATION_MS, DEFAULT_PRACTICA_DURATION_MS)
   const qualy = descomponerDuracion(DEFAULT_QUALY_DURATION_MS, DEFAULT_QUALY_DURATION_MS)
+  const timeattack = descomponerDuracion(DEFAULT_TIMEATTACK_DURATION_MS, DEFAULT_TIMEATTACK_DURATION_MS)
 
   return {
     id: nuevoTorneoId(),
@@ -45,55 +47,73 @@ function nuevoCircuito(index) {
     practicaDuracionSec: practica.sec,
     qualyDuracionMin: qualy.min,
     qualyDuracionSec: qualy.sec,
+    timeattackDuracionMin: timeattack.min,
+    timeattackDuracionSec: timeattack.sec,
     tiempoMinimoVuelta: DEFAULT_TIME_MIN,
   }
 }
 
-function construirConfig(nombreTorneo, circuitos) {
+// Las sesiones de un circuito según la modalidad. En time attack el circuito es una sola
+// sesión temporizada; en clásico son práctica/qualy (según toggles) + carrera.
+function sesionesDelCircuito(circuito, circuitoId, modalidad) {
+  if (modalidad === MODALIDAD.TIME_ATTACK) {
+    return [{
+      id: `${circuitoId}-timeattack`,
+      tipo: TIPO_SESION.TIME_ATTACK,
+      vueltas: 0,
+      duracionMs: duracionDesdeCampos(
+        circuito.timeattackDuracionMin,
+        circuito.timeattackDuracionSec,
+        DEFAULT_TIMEATTACK_DURATION_MS,
+      ),
+    }]
+  }
+
+  const sesiones = []
+  if (circuito.practica) {
+    sesiones.push({
+      id: `${circuitoId}-practica`,
+      tipo: TIPO_SESION.PRACTICA,
+      vueltas: 0,
+      duracionMs: duracionDesdeCampos(
+        circuito.practicaDuracionMin,
+        circuito.practicaDuracionSec,
+        DEFAULT_PRACTICA_DURATION_MS,
+      ),
+    })
+  }
+  if (circuito.qualy) {
+    sesiones.push({
+      id: `${circuitoId}-qualy`,
+      tipo: TIPO_SESION.QUALY,
+      vueltas: 0,
+      duracionMs: duracionDesdeCampos(
+        circuito.qualyDuracionMin,
+        circuito.qualyDuracionSec,
+        DEFAULT_QUALY_DURATION_MS,
+      ),
+    })
+  }
+  sesiones.push({
+    id: `${circuitoId}-carrera`,
+    tipo: TIPO_SESION.CARRERA,
+    vueltas: Math.max(1, Number(circuito.vueltasCarrera) || DEFAULT_RACE_LAPS),
+  })
+  return sesiones
+}
+
+function construirConfig(nombreTorneo, circuitos, modalidad) {
   return {
     ...DEFAULT_CONFIG,
     nombre: nombreTorneo.trim() || DEFAULT_CONFIG.nombre,
+    modalidad,
     circuitos: circuitos.map((circuito, index) => {
       const circuitoId = `c${index + 1}`
-      const sesiones = []
-
-      if (circuito.practica) {
-        sesiones.push({
-          id: `${circuitoId}-practica`,
-          tipo: TIPO_SESION.PRACTICA,
-          vueltas: 0,
-          duracionMs: duracionDesdeCampos(
-            circuito.practicaDuracionMin,
-            circuito.practicaDuracionSec,
-            DEFAULT_PRACTICA_DURATION_MS,
-          ),
-        })
-      }
-
-      if (circuito.qualy) {
-        sesiones.push({
-          id: `${circuitoId}-qualy`,
-          tipo: TIPO_SESION.QUALY,
-          vueltas: 0,
-          duracionMs: duracionDesdeCampos(
-            circuito.qualyDuracionMin,
-            circuito.qualyDuracionSec,
-            DEFAULT_QUALY_DURATION_MS,
-          ),
-        })
-      }
-
-      sesiones.push({
-        id: `${circuitoId}-carrera`,
-        tipo: TIPO_SESION.CARRERA,
-        vueltas: Math.max(1, Number(circuito.vueltasCarrera) || DEFAULT_RACE_LAPS),
-      })
-
       return {
         id: circuitoId,
         nombre: circuito.nombre.trim() || `CIRCUITO ${index + 1}`,
         tiempoMinimoVuelta: Math.max(500, Number(circuito.tiempoMinimoVuelta) || DEFAULT_TIME_MIN),
-        sesiones,
+        sesiones: sesionesDelCircuito(circuito, circuitoId, modalidad),
       }
     }),
   }
@@ -101,7 +121,10 @@ function construirConfig(nombreTorneo, circuitos) {
 
 export default function CreateTournamentForm({ onCreate, onCancel, creating }) {
   const [nombreTorneo, setNombreTorneo] = useState(DEFAULT_CONFIG.nombre)
+  const [modalidad, setModalidad] = useState(MODALIDAD.CLASICO)
   const [circuitos, setCircuitos] = useState(() => [nuevoCircuito(0), nuevoCircuito(1)])
+
+  const esTimeAttack = modalidad === MODALIDAD.TIME_ATTACK
 
   function agregarCircuito() {
     setCircuitos((prev) => [...prev, nuevoCircuito(prev.length)])
@@ -147,7 +170,7 @@ export default function CreateTournamentForm({ onCreate, onCancel, creating }) {
 
   function submit(e) {
     e.preventDefault()
-    onCreate(construirConfig(nombreTorneo, circuitos))
+    onCreate(construirConfig(nombreTorneo, circuitos, modalidad))
   }
 
   return (
@@ -163,6 +186,35 @@ export default function CreateTournamentForm({ onCreate, onCancel, creating }) {
           onChange={(e) => setNombreTorneo(e.target.value)}
           placeholder="GP CUMPLE RC"
         />
+      </div>
+
+      <div className="form-section">
+        <label className="landing-label">MODALIDAD</label>
+        <div className="row toggles">
+          <label className="toggle">
+            <input
+              type="radio"
+              name="modalidad"
+              checked={!esTimeAttack}
+              onChange={() => setModalidad(MODALIDAD.CLASICO)}
+            />
+            <span>CLÁSICO (PRÁCTICA · QUALY · CARRERA)</span>
+          </label>
+          <label className="toggle">
+            <input
+              type="radio"
+              name="modalidad"
+              checked={esTimeAttack}
+              onChange={() => setModalidad(MODALIDAD.TIME_ATTACK)}
+            />
+            <span>PURO TIME ATTACK</span>
+          </label>
+        </div>
+        {esTimeAttack && (
+          <div className="text-dim" style={{ marginTop: 6 }}>
+            CADA CIRCUITO ES UNA SESIÓN CONTRA RELOJ. GANA LA VUELTA MÁS RÁPIDA Y SUMA PUNTOS.
+          </div>
+        )}
       </div>
 
       <div className="form-section">
@@ -202,39 +254,45 @@ export default function CreateTournamentForm({ onCreate, onCancel, creating }) {
               />
             </div>
 
-            <div className="form-section">
-              <label className="landing-label">VUELTAS DE CARRERA</label>
-              <input
-                className="input input--sm"
-                type="number"
-                min="1"
-                value={circuito.vueltasCarrera}
-                onChange={(e) => actualizarCircuito(index, 'vueltasCarrera', Number(e.target.value))}
-              />
-            </div>
+            {esTimeAttack ? (
+              renderDuracion(index, 'timeattack', 'DURACIÓN DEL TIME ATTACK', circuito)
+            ) : (
+              <>
+                <div className="form-section">
+                  <label className="landing-label">VUELTAS DE CARRERA</label>
+                  <input
+                    className="input input--sm"
+                    type="number"
+                    min="1"
+                    value={circuito.vueltasCarrera}
+                    onChange={(e) => actualizarCircuito(index, 'vueltasCarrera', Number(e.target.value))}
+                  />
+                </div>
 
-            <div className="row toggles">
-              <label className="toggle">
-                <input
-                  type="checkbox"
-                  checked={circuito.practica}
-                  onChange={(e) => actualizarCircuito(index, 'practica', e.target.checked)}
-                />
-                <span>PRACTICA LIBRE</span>
-              </label>
+                <div className="row toggles">
+                  <label className="toggle">
+                    <input
+                      type="checkbox"
+                      checked={circuito.practica}
+                      onChange={(e) => actualizarCircuito(index, 'practica', e.target.checked)}
+                    />
+                    <span>PRACTICA LIBRE</span>
+                  </label>
 
-              <label className="toggle">
-                <input
-                  type="checkbox"
-                  checked={circuito.qualy}
-                  onChange={(e) => actualizarCircuito(index, 'qualy', e.target.checked)}
-                />
-                <span>QUALY</span>
-              </label>
-            </div>
+                  <label className="toggle">
+                    <input
+                      type="checkbox"
+                      checked={circuito.qualy}
+                      onChange={(e) => actualizarCircuito(index, 'qualy', e.target.checked)}
+                    />
+                    <span>QUALY</span>
+                  </label>
+                </div>
 
-            {circuito.practica && renderDuracion(index, 'practica', 'TIEMPO MÁXIMO DE PRÁCTICA', circuito)}
-            {circuito.qualy && renderDuracion(index, 'qualy', 'TIEMPO MÁXIMO DE QUALY', circuito)}
+                {circuito.practica && renderDuracion(index, 'practica', 'TIEMPO MÁXIMO DE PRÁCTICA', circuito)}
+                {circuito.qualy && renderDuracion(index, 'qualy', 'TIEMPO MÁXIMO DE QUALY', circuito)}
+              </>
+            )}
           </div>
         ))}
       </div>

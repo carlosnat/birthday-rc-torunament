@@ -7,7 +7,7 @@ import { useNow } from '../../hooks/useNow.js'
 import ColorBadge from '../../components/ColorBadge.jsx'
 import QRRegistro from '../../components/QRRegistro.jsx'
 import { clasificar } from '../../domain/classification.js'
-import { CARRITO, TORNEO } from '../../domain/constants.js'
+import { CARRITO, TORNEO, nombreTipo } from '../../domain/constants.js'
 import { avatarDeEquipo } from '../../domain/participants.js'
 import { esSesionTemporizada, formatCountdown, tiempoRestanteEn } from '../../domain/sessionTimer.js'
 import { urlRol } from '../../currentTorneo.js'
@@ -61,7 +61,7 @@ export default function PublicoEspejo() {
 
       {s && (
         <div className="panel">
-          <h2>{torneo.circuitoActivo} · {s.tipo} · {s.estado}</h2>
+          <h2>{torneo.circuitoActivo} · {nombreTipo(s.tipo)} · {s.estado}</h2>
           {temporizada && <div className="text-dim" style={{ marginBottom: 8 }}>TIEMPO RESTANTE: {formatCountdown(restanteMs)}</div>}
           <table className="tabla">
             <thead><tr><th>POS</th><th>EQUIPO</th><th>VUELTAS</th><th>ÚLT.</th><th>MEJOR</th></tr></thead>

@@ -1,12 +1,8 @@
-import { SESION, TIPO_SESION } from './constants.js'
+import { SESION, tipoTemporizado } from './constants.js'
 
 export function esSesionTemporizada(sesion) {
   const duracionMs = Number(sesion?.duracionMs)
-  return (
-    (sesion?.tipo === TIPO_SESION.PRACTICA || sesion?.tipo === TIPO_SESION.QUALY) &&
-    Number.isFinite(duracionMs) &&
-    duracionMs > 0
-  )
+  return tipoTemporizado(sesion?.tipo) && Number.isFinite(duracionMs) && duracionMs > 0
 }
 
 export function msConsumidosEn(sesion, now = Date.now()) {

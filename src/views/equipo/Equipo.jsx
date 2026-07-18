@@ -13,7 +13,7 @@ import { clasificar } from '../../domain/classification.js'
 import { calcularGaps, puntosAcumulados } from '../../domain/standings.js'
 import { getColor } from '../../domain/colors.js'
 import { avatarDeEquipo, participantesNormalizados } from '../../domain/participants.js'
-import { SESION, CARRITO } from '../../domain/constants.js'
+import { SESION, CARRITO, nombreTipo } from '../../domain/constants.js'
 import { esSesionTemporizada, formatCountdown, tiempoRestanteEn } from '../../domain/sessionTimer.js'
 import { TORNEO_ID } from '../../currentTorneo.js'
 import * as A from '../../firebase/raceActions.js'
@@ -82,7 +82,7 @@ export default function Equipo() {
 
   const panelEstado = s ? (
     <>
-      <div className="eq-sesion">{torneo.circuitoActivo} · {s.tipo} · <b>{s.estado}</b></div>
+      <div className="eq-sesion">{torneo.circuitoActivo} · {nombreTipo(s.tipo)} · <b>{s.estado}</b></div>
       {temporizada && <div className="eq-countdown">TIEMPO RESTANTE · {formatCountdown(restanteMs)}</div>}
     </>
   ) : null
@@ -185,7 +185,7 @@ function SesionVueltas({ sesion, eqId, activa }) {
     <section className={`eq-laps-session ${activa ? 'is-active' : ''}`}>
       <div className="eq-laps-session-top">
         <div>
-          <div className="eq-laps-session-title">{sesion.tipo}</div>
+          <div className="eq-laps-session-title">{nombreTipo(sesion.tipo)}</div>
           <div className="eq-laps-session-state">{sesion.estado}</div>
         </div>
         <div className="eq-laps-actions">

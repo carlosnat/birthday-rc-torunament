@@ -11,26 +11,13 @@ import * as P from '../firebase/paths.js'
 import { TORNEO_ID } from '../currentTorneo.js'
 import { transactPath, updatePath, nuevaKey, logEvento } from '../firebase/tournamentDb.js'
 import { limpiarCamara } from './signaling.js'
-import { STALE_MS } from './rtcConfig.js'
+import { titularVivo } from './lease.js'
+
+// La política pura del lease vive en lease.js (testeable sin firebase). Se re-exporta para que
+// los consumidores (Camara.jsx, useCamaraViewer.js) la sigan importando desde acá.
+export { titularVivo, camaraActiva } from './lease.js'
 
 const T = TORNEO_ID
-
-/** ¿Sigue viva? Desconectada explícita o sin latido reciente => se puede tomar. */
-function viva(cam, now) {
-  if (!cam || cam.estado === 'DESCONECTADA') return false
-  return cam.lastHeartbeat != null && now - cam.lastHeartbeat <= STALE_MS
-}
-
-/** El titular vivo del lease, o null. `{ id, ...cam }` para que el id viaje con el objeto. */
-export function titularVivo(camaras, now = Date.now()) {
-  const entrada = Object.entries(camaras || {}).find(([, cam]) => viva(cam, now))
-  return entrada ? { id: entrada[0], ...entrada[1] } : null
-}
-
-/** La cámara que el público debería mirar. Null si no hay ninguna viva. */
-export function camaraActiva(torneo, now = Date.now()) {
-  return titularVivo(torneo?.camaras, now)
-}
 
 /**
  * Toma el lease. Gana si: no hay titular, el titular está caído, o el titular soy yo

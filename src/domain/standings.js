@@ -1,10 +1,10 @@
 // src/domain/standings.js
 // Cálculos derivados para la pantalla pública: puntos acumulados del torneo y gaps.
 
-import { TIPO_SESION } from './constants.js'
+import { tipoPuntua } from './constants.js'
 
 /**
- * Suma los puntos de todas las sesiones de tipo CARRERA ya finalizadas.
+ * Suma los puntos de todas las sesiones que puntúan (carrera y time attack) ya finalizadas.
  * @returns {Array} [{ eqId, puntos }] ordenado desc por puntos.
  */
 export function puntosAcumulados(torneo) {
@@ -12,7 +12,7 @@ export function puntosAcumulados(torneo) {
   for (const eqId of Object.keys(torneo?.equipos || {})) acc[eqId] = 0
 
   for (const s of Object.values(torneo?.sesiones || {})) {
-    if (s.tipo !== TIPO_SESION.CARRERA) continue
+    if (!tipoPuntua(s.tipo)) continue
     for (const r of s.resultados || []) {
       acc[r.eqId] = (acc[r.eqId] || 0) + (r.puntos || 0)
     }
@@ -24,12 +24,11 @@ export function puntosAcumulados(torneo) {
 }
 
 /**
- * Diferencia entre dos carritos, del que va adelante al que va atrás.
- * Se mide sobre el cruce de meta: dos autos en la misma vuelta están separados por la
- * diferencia entre sus últimas pasadas. Si el de atrás tiene menos vueltas, va abajo.
+ * Diferencia por distancia (carrera): del que va adelante al que va atrás, medida sobre el
+ * cruce de meta. Si el de atrás tiene menos vueltas, va abajo.
  * @returns {object|null} { vueltas } | { ms } | null si falta info
  */
-function diferencia(adelante, atras) {
+function diferenciaPorVueltas(adelante, atras) {
   const dv = (adelante?.vueltas ?? 0) - (atras?.vueltas ?? 0)
   if (dv > 0) return { vueltas: dv }
   const ta = adelante?.tsFinal ?? adelante?.ultimaPasada
@@ -39,18 +38,30 @@ function diferencia(adelante, atras) {
 }
 
 /**
+ * Diferencia por mejor vuelta (qualy/time attack): cuánto más lento es el de atrás. Si a
+ * alguno le falta la vuelta válida, no hay diferencia que mostrar.
+ * @returns {object|null} { ms } | null
+ */
+function diferenciaPorMejorVuelta(adelante, atras) {
+  if (adelante?.mejorVuelta == null || atras?.mejorVuelta == null) return null
+  return { ms: Math.max(0, atras.mejorVuelta - adelante.mejorVuelta) }
+}
+
+/**
  * Intervalos estilo torre de tiempos F1 para una clasificación en vivo.
  * - `interval`: contra el auto de adelante.
  * - `lider`: contra el primero.
- * A diferencia de calcularGaps(), no depende de tsFinal, así que funciona durante la
- * carrera y no sólo cuando los carritos ya terminaron.
+ * A diferencia de calcularGaps(), no depende de tsFinal, así que funciona durante la sesión
+ * y no sólo cuando los carritos ya terminaron.
  * @param {Array} orden salida de clasificar() (ya ordenada)
+ * @param {boolean} porMejorVuelta true en qualy/time attack: el gap es diferencia de tiempo
  * @returns {Object} { eqId: { esLider, interval, lider } }
  */
-export function calcularIntervalos(orden) {
+export function calcularIntervalos(orden, porMejorVuelta = false) {
   const out = {}
   if (!orden || orden.length === 0) return out
 
+  const diferencia = porMejorVuelta ? diferenciaPorMejorVuelta : diferenciaPorVueltas
   const lider = orden[0]
   out[lider.eqId] = { esLider: true, interval: null, lider: null }
 

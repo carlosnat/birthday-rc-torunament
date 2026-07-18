@@ -11,7 +11,7 @@ import QRRegistro from '../../components/QRRegistro.jsx'
 import SensorHealth from '../../components/SensorHealth.jsx'
 import * as A from '../../firebase/raceActions.js'
 import { moverSensor } from '../../firebase/registroActions.js'
-import { TORNEO, SESION, CARRITO } from '../../domain/constants.js'
+import { TORNEO, SESION, CARRITO, nombreTipo } from '../../domain/constants.js'
 import { avatarDeEquipo, participantesNormalizados } from '../../domain/participants.js'
 import { esSesionTemporizada, formatCountdown, tiempoRestanteEn } from '../../domain/sessionTimer.js'
 import { TORNEO_ID, irA, urlRol } from '../../currentTorneo.js'
@@ -101,7 +101,7 @@ function Cabecera({ torneo }) {
     <div className="row">
       <span className="chip-estado">{torneo.estado}</span>
       {torneo.circuitoActivo && <span className="chip-estado">{torneo.circuitoActivo}</span>}
-      {s && <span className="chip-estado">{s.tipo} · {s.estado}</span>}
+      {s && <span className="chip-estado">{nombreTipo(s.tipo)} · {s.estado}</span>}
     </div>
   )
 }
@@ -173,7 +173,7 @@ function SesionControles({ torneo }) {
 
   return (
     <div className="panel">
-      <h2>SESIÓN · {s.tipo}</h2>
+      <h2>SESIÓN · {nombreTipo(s.tipo)}</h2>
       {temporizada && (
         <div className="row" style={{ marginBottom: 8, justifyContent: 'space-between' }}>
           <span className="chip-estado">CRONO {est === SESION.PAUSADA ? 'PAUSADO' : 'ACTIVO'}</span>
@@ -269,7 +269,7 @@ function Resultados({ torneo }) {
       <h2>RESULTADOS</h2>
       {finalizadas.map(([sid, ses]) => (
         <div key={sid} style={{ marginBottom: 12 }}>
-          <div className="text-dim">{sid} · {ses.tipo}</div>
+          <div className="text-dim">{sid} · {nombreTipo(ses.tipo)}</div>
           <table className="tabla">
             <thead><tr><th>POS</th><th>EQUIPO</th><th>V</th><th>EST.</th><th>PTS</th></tr></thead>
             <tbody>

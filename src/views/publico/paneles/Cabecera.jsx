@@ -2,6 +2,7 @@
 // Fila 1: identidad del torneo e info de la sesión en curso.
 
 import { esSesionTemporizada, formatCountdown, tiempoRestanteEn } from '../../../domain/sessionTimer.js'
+import { nombreTipo } from '../../../domain/constants.js'
 import './cabecera.css'
 
 export default function Cabecera({ torneo, sesion, orden, now }) {
@@ -15,7 +16,7 @@ export default function Cabecera({ torneo, sesion, orden, now }) {
 
       <div className="cab-meta">
         {torneo.circuitoActivo && <span>{torneo.circuitoActivo}</span>}
-        {sesion && <span className="cab-tipo">{sesion.tipo}</span>}
+        {sesion && <span className="cab-tipo">{nombreTipo(sesion.tipo)}</span>}
         {sesion?.vueltasObjetivo > 0 && lider && (
           <span className="cab-vuelta">
             VUELTA {Math.min(lider.vueltas, sesion.vueltasObjetivo)}/{sesion.vueltasObjetivo}

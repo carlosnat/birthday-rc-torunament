@@ -35,6 +35,34 @@ export const TIPO_SESION = Object.freeze({
   PRACTICA: 'PRACTICA',
   QUALY: 'QUALY',
   CARRERA: 'CARRERA',
+  TIME_ATTACK: 'TIME_ATTACK',
+})
+
+// Reglas por tipo, centralizadas. Antes cada consumidor comparaba el tipo a mano
+// (=== TIPO_SESION.CARRERA), dispersando la lógica. Estos predicados son la fuente única.
+
+/** Gana la vuelta más rápida (a diferencia de la carrera, que gana por más vueltas). */
+export const ordenaPorMejorVuelta = (tipo) =>
+  tipo === TIPO_SESION.QUALY || tipo === TIPO_SESION.TIME_ATTACK
+
+/** Reparte puntos F1 al campeonato del torneo. */
+export const tipoPuntua = (tipo) =>
+  tipo === TIPO_SESION.CARRERA || tipo === TIPO_SESION.TIME_ATTACK
+
+/** Corre contra reloj. esSesionTemporizada() exige ADEMÁS duracionMs > 0. */
+export const tipoTemporizado = (tipo) =>
+  tipo === TIPO_SESION.PRACTICA ||
+  tipo === TIPO_SESION.QUALY ||
+  tipo === TIPO_SESION.TIME_ATTACK
+
+/** Para mostrar: "TIME_ATTACK" -> "TIME ATTACK". */
+export const nombreTipo = (tipo) => String(tipo || '').replace(/_/g, ' ')
+
+// Modalidad del torneo. CLASICO conserva el string 'TORNEO' que ya escribían los torneos
+// existentes, para no invalidar los que están en la base.
+export const MODALIDAD = Object.freeze({
+  CLASICO: 'TORNEO',
+  TIME_ATTACK: 'TIME_ATTACK',
 })
 
 // Puntuación estilo F1 por defecto (25-18-15-12). Se guarda en config del torneo.

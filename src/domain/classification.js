@@ -1,16 +1,38 @@
 // src/domain/classification.js
-// Clasificación final de una sesión. Ordena carritos y (en carrera) asigna puntos F1.
+// Clasificación final de una sesión. Ordena carritos y (donde corresponde) asigna puntos F1.
 
-import { CARRITO, TIPO_SESION } from './constants.js'
+import { CARRITO, ordenaPorMejorVuelta, tipoPuntua } from './constants.js'
 import { puntosPorPosicion } from './scoring.js'
 
 /**
- * Ordena los carritos de una sesión y construye la tabla de resultados.
- * Criterio F1:
+ * Orden por distancia (carrera/práctica):
  *   1) más vueltas completadas
  *   2) los que TERMINARON antes que los DNF (a igualdad de vueltas)
  *   3) menor tsFinal (quien cruzó/llegó primero)
- * DNF clasifican por vueltas y reciben puntos si corresponde.
+ */
+function comparaPorVueltas(a, b) {
+  if (b.vueltas !== a.vueltas) return b.vueltas - a.vueltas
+  const aDnf = a.estado === CARRITO.DNF ? 1 : 0
+  const bDnf = b.estado === CARRITO.DNF ? 1 : 0
+  if (aDnf !== bDnf) return aDnf - bDnf // TERMINÓ (0) antes que DNF (1)
+  const aFin = a.tsFinal ?? a.ultimaPasada ?? Infinity
+  const bFin = b.tsFinal ?? b.ultimaPasada ?? Infinity
+  return aFin - bFin
+}
+
+/**
+ * Orden por mejor vuelta (qualy/time attack): gana la vuelta más rápida, sin importar cuántas
+ * dio. Los que no completaron ninguna vuelta válida (mejorVuelta null) van al fondo. El estado
+ * DNF no altera este orden: si hiciste la vuelta, cuenta.
+ */
+function comparaPorMejorVuelta(a, b) {
+  const am = a.mejorVuelta ?? Infinity
+  const bm = b.mejorVuelta ?? Infinity
+  return am - bm
+}
+
+/**
+ * Ordena los carritos de una sesión y construye la tabla de resultados.
  *
  * @param {object} carritosMap { eqId: carrito }
  * @param {string} tipoSesion TIPO_SESION.*
@@ -23,17 +45,10 @@ export function clasificar(carritosMap, tipoSesion, puntuacion) {
     ...c,
   }))
 
-  entradas.sort((a, b) => {
-    if (b.vueltas !== a.vueltas) return b.vueltas - a.vueltas
-    const aDnf = a.estado === CARRITO.DNF ? 1 : 0
-    const bDnf = b.estado === CARRITO.DNF ? 1 : 0
-    if (aDnf !== bDnf) return aDnf - bDnf // TERMINÓ (0) antes que DNF (1)
-    const aFin = a.tsFinal ?? a.ultimaPasada ?? Infinity
-    const bFin = b.tsFinal ?? b.ultimaPasada ?? Infinity
-    return aFin - bFin
-  })
+  const comparador = ordenaPorMejorVuelta(tipoSesion) ? comparaPorMejorVuelta : comparaPorVueltas
+  entradas.sort(comparador)
 
-  const esCarrera = tipoSesion === TIPO_SESION.CARRERA
+  const puntua = tipoPuntua(tipoSesion)
 
   return entradas.map((c, i) => {
     const posicion = i + 1
@@ -48,7 +63,7 @@ export function clasificar(carritosMap, tipoSesion, puntuacion) {
       ultimaPasada: c.ultimaPasada ?? null,
       tsFinal: c.tsFinal ?? null,
       estado: c.estado,
-      puntos: esCarrera ? puntosPorPosicion(posicion, puntuacion) : 0,
+      puntos: puntua ? puntosPorPosicion(posicion, puntuacion) : 0,
     }
   })
 }
