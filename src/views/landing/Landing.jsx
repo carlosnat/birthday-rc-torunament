@@ -82,9 +82,20 @@ export default function Landing() {
                 <div className="landing-tile-meta text-dim">DESDE {torneo.origenTorneoId}</div>
               )}
               <div className="landing-tile-meta text-dim">{torneo.estado}</div>
-              <button className="btn btn--ghost" onClick={() => irA('comisario', torneo.id)}>
-                ABRIR
-              </button>
+              <div className="landing-open">
+                <span className="landing-open-label">ABRIR</span>
+                <div className="row landing-open-actions">
+                  <button className="btn btn--ghost" onClick={() => irA('comisario', torneo.id)}>
+                    COMISARIO
+                  </button>
+                  <button className="btn btn--ghost" onClick={() => irA('publico', torneo.id)}>
+                    PUBLICO
+                  </button>
+                  <button className="btn btn--ghost" onClick={() => irA('equipo', torneo.id)}>
+                    EQUIPO
+                  </button>
+                </div>
+              </div>
             </article>
           ))
         )}

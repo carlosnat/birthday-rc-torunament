@@ -72,6 +72,28 @@
   letter-spacing: 0.5px;
 }
 
+.landing-open {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.landing-open-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+
+.landing-open-actions {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.landing-open-actions .btn {
+  flex: 1 1 120px;
+}
+
 .landing-badge {
   padding: 2px 8px;
   border-radius: 999px;
